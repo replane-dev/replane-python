@@ -31,6 +31,9 @@ from .types import Config, ContextValue, parse_config
 
 T = TypeVar("T")
 
+# Sentinel value for detecting when no default was provided
+_MISSING: Any = object()
+
 logger = logging.getLogger("replane")
 
 
@@ -195,7 +198,7 @@ class SyncReplaneClient:
         name: str,
         *,
         context: dict[str, ContextValue] | None = None,
-        default: T | None = None,
+        default: T = _MISSING,
     ) -> Any:
         """Get a config value.
 
@@ -205,7 +208,7 @@ class SyncReplaneClient:
         Args:
             name: Config name to retrieve.
             context: Context for override evaluation (merged with default).
-            default: Default value if config doesn't exist.
+            default: Default value if config doesn't exist (can be None).
 
         Returns:
             The config value with overrides applied.
@@ -222,7 +225,7 @@ class SyncReplaneClient:
 
         with self._lock:
             if name not in self._configs:
-                if default is not None:
+                if default is not _MISSING:
                     logger.debug("Config %r not found, returning default: %r", name, default)
                     return default
                 logger.debug("Config %r not found, no default provided", name)

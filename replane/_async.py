@@ -31,6 +31,9 @@ except ImportError:
 
 T = TypeVar("T")
 
+# Sentinel value for detecting when no default was provided
+_MISSING: Any = object()
+
 logger = logging.getLogger("replane")
 
 
@@ -212,7 +215,7 @@ class AsyncReplaneClient:
         name: str,
         *,
         context: dict[str, ContextValue] | None = None,
-        default: T | None = None,
+        default: T = _MISSING,
     ) -> Any:
         """Get a config value.
 
@@ -225,7 +228,7 @@ class AsyncReplaneClient:
         Args:
             name: Config name to retrieve.
             context: Context for override evaluation (merged with default).
-            default: Default value if config doesn't exist.
+            default: Default value if config doesn't exist (can be None).
 
         Returns:
             The config value with overrides applied.
@@ -241,7 +244,7 @@ class AsyncReplaneClient:
         logger.debug("get(%r) with context: %s", name, merged_context or "(none)")
 
         if name not in self._configs:
-            if default is not None:
+            if default is not _MISSING:
                 logger.debug("Config %r not found, returning default: %r", name, default)
                 return default
             logger.debug("Config %r not found, no default provided", name)
@@ -427,9 +430,20 @@ class AsyncReplaneClient:
     async def _process_stream(self, response: httpx.Response) -> None:
         """Process SSE events from the response stream."""
         parser = SSEParser()
+        iterator = response.aiter_text().__aiter__()
 
-        async for chunk in response.aiter_text():
-            if self._closed:
+        while not self._closed:
+            try:
+                # Wait for the next chunk with inactivity timeout
+                chunk = await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=self._inactivity_timeout,
+                )
+            except asyncio.TimeoutError:
+                logger.debug("SSE inactivity timeout, reconnecting...")
+                break
+            except StopAsyncIteration:
+                logger.debug("SSE stream ended")
                 break
 
             for event in parser.feed(chunk):

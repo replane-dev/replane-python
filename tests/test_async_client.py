@@ -141,6 +141,39 @@ class TestAsyncClientConfigRetrieval:
             value = client.get("missing", default="fallback")
             assert value == "fallback"
 
+    async def test_get_with_none_default(self, mock_server: MockSSEServer):
+        """Getting a missing config with default=None returns None."""
+        mock_server.send_init([])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            value = client.get("missing", default=None)
+            assert value is None
+
+    async def test_get_with_false_default(self, mock_server: MockSSEServer):
+        """Getting a missing config with default=False returns False."""
+        mock_server.send_init([])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            value = client.get("missing", default=False)
+            assert value is False
+
+    async def test_get_with_zero_default(self, mock_server: MockSSEServer):
+        """Getting a missing config with default=0 returns 0."""
+        mock_server.send_init([])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            value = client.get("missing", default=0)
+            assert value == 0
+
     async def test_fallback_configs(self, mock_server: MockSSEServer):
         """Fallback configs are used when server doesn't have them."""
         mock_server.send_init([create_config("from-server", "server")])
@@ -886,3 +919,28 @@ class TestAsyncClientDebugMode:
             debug=True,
         ) as client:
             assert client.get("feature") is True
+
+
+class TestAsyncClientInactivityTimeout:
+    """Test inactivity timeout handling."""
+
+    async def test_inactivity_timeout_triggers_reconnect(self, mock_server: MockSSEServer):
+        """Client reconnects when server stops sending events."""
+        mock_server.send_init([create_config("feature", "initial")])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+            inactivity_timeout_ms=1000,  # 1 second timeout
+            retry_delay_ms=100,
+        ) as client:
+            assert client.get("feature") == "initial"
+
+            # Queue a new init for when the client reconnects after inactivity
+            mock_server.send_init([create_config("feature", "after-reconnect")])
+
+            # Wait for inactivity timeout + reconnection
+            await asyncio.sleep(1.5)
+
+            # Should have the new value after reconnect
+            assert client.get("feature") == "after-reconnect"
