@@ -152,31 +152,31 @@ def parse_condition(data: dict[str, Any]) -> Condition:
         return PropertyCondition(
             operator=operator,
             property=data["property"],
-            expected=data["expected"],
+            expected=data.get("expected", data.get("value")),
         )
     elif operator == "less_than":
         return PropertyCondition(
             operator="lt",
             property=data["property"],
-            expected=data["expected"],
+            expected=data.get("expected", data.get("value")),
         )
     elif operator == "less_than_or_equal":
         return PropertyCondition(
             operator="lte",
             property=data["property"],
-            expected=data["expected"],
+            expected=data.get("expected", data.get("value")),
         )
     elif operator == "greater_than":
         return PropertyCondition(
             operator="gt",
             property=data["property"],
-            expected=data["expected"],
+            expected=data.get("expected", data.get("value")),
         )
     elif operator == "greater_than_or_equal":
         return PropertyCondition(
             operator="gte",
             property=data["property"],
-            expected=data["expected"],
+            expected=data.get("expected", data.get("value")),
         )
     else:
         raise ValueError(f"Unknown condition operator: {operator}")

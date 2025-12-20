@@ -305,6 +305,14 @@ class AsyncReplaneClient:
 
         return unsubscribe
 
+    def is_initialized(self) -> bool:
+        """Check if the client has finished initialization.
+
+        Returns:
+            True if the client has received initial configs from the server.
+        """
+        return self._initialized.is_set()
+
     async def close(self) -> None:
         """Close the client and stop the SSE connection."""
         logger.debug("close() called")
@@ -424,13 +432,19 @@ class AsyncReplaneClient:
 
     async def _handle_event(self, event: Any) -> None:
         """Handle a parsed SSE event."""
-        logger.debug("SSE event received: type=%s", event.event)
-        if event.event == "init":
+        # Event type can be in SSE 'event:' field or in data.type
+        event_type = event.event
+        if event_type is None and isinstance(event.data, dict):
+            event_type = event.data.get("type")
+
+        logger.debug("SSE event received: type=%s", event_type)
+
+        if event_type == "init":
             await self._handle_init(event.data)
-        elif event.event == "config_change":
+        elif event_type == "config_change":
             await self._handle_config_change(event.data)
         else:
-            logger.debug("Unknown event type: %s, data=%s", event.event, event.data)
+            logger.debug("Unknown event type: %s, data=%s", event_type, event.data)
 
     async def _handle_init(self, data: dict[str, Any]) -> None:
         """Handle the init event with all configs."""

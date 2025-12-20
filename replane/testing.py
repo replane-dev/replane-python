@@ -237,6 +237,17 @@ class InMemoryReplaneClient:
         """Close the client."""
         self._closed = True
 
+    def is_initialized(self) -> bool:
+        """Check if the client has finished initialization.
+
+        For the in-memory client, this always returns True since
+        configs are available immediately.
+
+        Returns:
+            True (always, for in-memory client).
+        """
+        return True
+
     def __enter__(self) -> InMemoryReplaneClient:
         return self
 

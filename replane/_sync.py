@@ -288,6 +288,14 @@ class SyncReplaneClient:
 
         return unsubscribe
 
+    def is_initialized(self) -> bool:
+        """Check if the client has finished initialization.
+
+        Returns:
+            True if the client has received initial configs from the server.
+        """
+        return self._initialized.is_set()
+
     def close(self) -> None:
         """Close the client and stop the SSE connection."""
         logger.debug("close() called")
@@ -425,13 +433,22 @@ class SyncReplaneClient:
 
         while not self._stop_event.is_set():
             try:
-                chunk = response.read(buffer_size)
+                # Use read1() to get available data without blocking for full buffer.
+                # This is essential for SSE where data arrives in small chunks.
+                # read1() returns data as soon as it's available from the socket.
+                if hasattr(response.fp, "read1"):
+                    chunk = response.fp.read1(buffer_size)  # type: ignore[union-attr]
+                else:
+                    # Fallback for environments where read1 isn't available
+                    chunk = response.read(buffer_size)
+
                 if not chunk:
                     logger.debug("SSE stream ended")
                     break
 
                 last_event_time = time.monotonic()
                 text = chunk.decode("utf-8", errors="replace")
+                logger.debug("Received chunk: %d bytes", len(chunk))
 
                 for event in parser.feed(text):
                     self._handle_event(event)
@@ -449,13 +466,19 @@ class SyncReplaneClient:
 
     def _handle_event(self, event: Any) -> None:
         """Handle a parsed SSE event."""
-        logger.debug("SSE event received: type=%s", event.event)
-        if event.event == "init":
+        # Event type can be in SSE 'event:' field or in data.type
+        event_type = event.event
+        if event_type is None and isinstance(event.data, dict):
+            event_type = event.data.get("type")
+
+        logger.debug("SSE event received: type=%s", event_type)
+
+        if event_type == "init":
             self._handle_init(event.data)
-        elif event.event == "config_change":
+        elif event_type == "config_change":
             self._handle_config_change(event.data)
         else:
-            logger.debug("Unknown event type: %s, data=%s", event.event, event.data)
+            logger.debug("Unknown event type: %s, data=%s", event_type, event.data)
 
     def _handle_init(self, data: dict[str, Any]) -> None:
         """Handle the init event with all configs."""
