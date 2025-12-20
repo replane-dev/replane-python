@@ -147,9 +147,7 @@ class InMemoryReplaneClient:
                 parsed_overrides.append(
                     Override(
                         name=override_data["name"],
-                        conditions=tuple(
-                            parse_condition(c) for c in override_data["conditions"]
-                        ),
+                        conditions=tuple(parse_condition(c) for c in override_data["conditions"]),
                         value=override_data["value"],
                     )
                 )

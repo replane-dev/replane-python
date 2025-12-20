@@ -20,7 +20,6 @@ from .types import (
     SegmentationCondition,
 )
 
-
 # FNV-1a 32-bit constants
 FNV_PRIME = 0x01000193
 FNV_OFFSET_BASIS = 0x811C9DC5

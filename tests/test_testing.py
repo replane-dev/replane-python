@@ -47,11 +47,13 @@ class TestInMemoryReplaneClient:
         client.set_config(
             "feature",
             value=False,
-            overrides=[{
-                "name": "test-env",
-                "conditions": [{"operator": "equals", "property": "env", "expected": "test"}],
-                "value": True,
-            }],
+            overrides=[
+                {
+                    "name": "test-env",
+                    "conditions": [{"operator": "equals", "property": "env", "expected": "test"}],
+                    "value": True,
+                }
+            ],
         )
         # Uses default context
         assert client.get("feature") is True
@@ -61,11 +63,13 @@ class TestInMemoryReplaneClient:
         client.set_config(
             "feature",
             value=False,
-            overrides=[{
-                "name": "test-env",
-                "conditions": [{"operator": "equals", "property": "env", "expected": "test"}],
-                "value": True,
-            }],
+            overrides=[
+                {
+                    "name": "test-env",
+                    "conditions": [{"operator": "equals", "property": "env", "expected": "test"}],
+                    "value": True,
+                }
+            ],
         )
         # Override default context
         assert client.get("feature", context={"env": "test"}) is True
@@ -139,13 +143,15 @@ class TestSetConfigWithOverrides:
         client.set_config(
             "feature",
             value=False,
-            overrides=[{
-                "name": "premium",
-                "conditions": [
-                    {"operator": "equals", "property": "plan", "expected": "premium"}
-                ],
-                "value": True,
-            }],
+            overrides=[
+                {
+                    "name": "premium",
+                    "conditions": [
+                        {"operator": "equals", "property": "plan", "expected": "premium"}
+                    ],
+                    "value": True,
+                }
+            ],
         )
 
         assert client.get("feature", context={"plan": "free"}) is False
@@ -156,14 +162,16 @@ class TestSetConfigWithOverrides:
         client.set_config(
             "rate-limit",
             value=100,
-            overrides=[{
-                "name": "premium-us",
-                "conditions": [
-                    {"operator": "equals", "property": "plan", "expected": "premium"},
-                    {"operator": "equals", "property": "region", "expected": "us"},
-                ],
-                "value": 10000,
-            }],
+            overrides=[
+                {
+                    "name": "premium-us",
+                    "conditions": [
+                        {"operator": "equals", "property": "plan", "expected": "premium"},
+                        {"operator": "equals", "property": "region", "expected": "us"},
+                    ],
+                    "value": 10000,
+                }
+            ],
         )
 
         assert client.get("rate-limit", context={"plan": "free", "region": "us"}) == 100
@@ -186,7 +194,11 @@ class TestSetConfigWithOverrides:
                 {
                     "name": "premium",
                     "conditions": [
-                        {"operator": "in", "property": "plan", "expected": ["premium", "enterprise"]}
+                        {
+                            "operator": "in",
+                            "property": "plan",
+                            "expected": ["premium", "enterprise"],
+                        }
                     ],
                     "value": "premium",
                 },
@@ -203,13 +215,15 @@ class TestSetConfigWithOverrides:
         client.set_config(
             "feature",
             value=False,
-            overrides=[{
-                "name": "paid-plans",
-                "conditions": [
-                    {"operator": "in", "property": "plan", "expected": ["pro", "enterprise"]}
-                ],
-                "value": True,
-            }],
+            overrides=[
+                {
+                    "name": "paid-plans",
+                    "conditions": [
+                        {"operator": "in", "property": "plan", "expected": ["pro", "enterprise"]}
+                    ],
+                    "value": True,
+                }
+            ],
         )
 
         assert client.get("feature", context={"plan": "free"}) is False

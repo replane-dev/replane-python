@@ -31,42 +31,38 @@ For testing:
     ... })
 """
 
-from .version import VERSION, VERSION_SHORT
-
-# Core clients
 from ._sync import SyncReplaneClient
-
-# Types
+from .errors import (
+    AuthenticationError,
+    ClientClosedError,
+    ConfigNotFoundError,
+    ErrorCode,
+    MissingDependencyError,
+    NetworkError,
+    NotInitializedError,
+    ReplaneError,
+    TimeoutError,
+)
 from .types import (
+    AndCondition,
+    Condition,
     Config,
     Context,
     ContextValue,
+    NotCondition,
+    OrCondition,
     Override,
-    Condition,
     PropertyCondition,
     SegmentationCondition,
-    AndCondition,
-    OrCondition,
-    NotCondition,
 )
+from .version import VERSION, VERSION_SHORT
 
-# Errors
-from .errors import (
-    ReplaneError,
-    ErrorCode,
-    ConfigNotFoundError,
-    TimeoutError,
-    AuthenticationError,
-    NetworkError,
-    ClientClosedError,
-    NotInitializedError,
-    MissingDependencyError,
-)
 
 # Async client (lazy import to avoid httpx dependency)
 def __getattr__(name: str):
     if name == "AsyncReplaneClient":
         from ._async import AsyncReplaneClient
+
         return AsyncReplaneClient
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

@@ -80,30 +80,22 @@ class TestEvaluateCondition:
         assert result == "unknown"
 
     def test_in_matched(self):
-        cond = PropertyCondition(
-            operator="in", property="plan", expected=["pro", "enterprise"]
-        )
+        cond = PropertyCondition(operator="in", property="plan", expected=["pro", "enterprise"])
         result = evaluate_condition(cond, {"plan": "pro"})
         assert result == "matched"
 
     def test_in_not_matched(self):
-        cond = PropertyCondition(
-            operator="in", property="plan", expected=["pro", "enterprise"]
-        )
+        cond = PropertyCondition(operator="in", property="plan", expected=["pro", "enterprise"])
         result = evaluate_condition(cond, {"plan": "free"})
         assert result == "not_matched"
 
     def test_not_in_matched(self):
-        cond = PropertyCondition(
-            operator="not_in", property="plan", expected=["free", "trial"]
-        )
+        cond = PropertyCondition(operator="not_in", property="plan", expected=["free", "trial"])
         result = evaluate_condition(cond, {"plan": "pro"})
         assert result == "matched"
 
     def test_not_in_not_matched(self):
-        cond = PropertyCondition(
-            operator="not_in", property="plan", expected=["free", "trial"]
-        )
+        cond = PropertyCondition(operator="not_in", property="plan", expected=["free", "trial"])
         result = evaluate_condition(cond, {"plan": "free"})
         assert result == "not_matched"
 
@@ -202,9 +194,7 @@ class TestEvaluateCondition:
             to_percentage=50,
             seed="feature-x",
         )
-        results = [
-            evaluate_condition(cond, {"user_id": "user-123"}) for _ in range(100)
-        ]
+        results = [evaluate_condition(cond, {"user_id": "user-123"}) for _ in range(100)]
         # All results should be the same
         assert len(set(results)) == 1
 
@@ -258,9 +248,7 @@ class TestEvaluateConfig:
                 Override(
                     name="premium",
                     conditions=(
-                        PropertyCondition(
-                            operator="equals", property="plan", expected="premium"
-                        ),
+                        PropertyCondition(operator="equals", property="plan", expected="premium"),
                     ),
                     value=1000,
                 ),
@@ -276,9 +264,7 @@ class TestEvaluateConfig:
                 Override(
                     name="premium",
                     conditions=(
-                        PropertyCondition(
-                            operator="equals", property="plan", expected="premium"
-                        ),
+                        PropertyCondition(operator="equals", property="plan", expected="premium"),
                     ),
                     value=1000,
                 ),
@@ -293,16 +279,12 @@ class TestEvaluateConfig:
             overrides=(
                 Override(
                     name="first",
-                    conditions=(
-                        PropertyCondition(operator="equals", property="v", expected=1),
-                    ),
+                    conditions=(PropertyCondition(operator="equals", property="v", expected=1),),
                     value="first-match",
                 ),
                 Override(
                     name="second",
-                    conditions=(
-                        PropertyCondition(operator="gte", property="v", expected=1),
-                    ),
+                    conditions=(PropertyCondition(operator="gte", property="v", expected=1),),
                     value="second-match",
                 ),
             ),

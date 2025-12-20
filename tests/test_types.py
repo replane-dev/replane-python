@@ -142,9 +142,7 @@ class TestParseOverride:
     def test_parse_override(self):
         data = {
             "name": "premium-users",
-            "conditions": [
-                {"operator": "equals", "property": "plan", "expected": "premium"}
-            ],
+            "conditions": [{"operator": "equals", "property": "plan", "expected": "premium"}],
             "value": True,
         }
         override = parse_override(data)

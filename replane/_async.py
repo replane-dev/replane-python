@@ -108,9 +108,7 @@ class AsyncReplaneClient:
 
         # Subscription callbacks
         self._all_subscribers: list[Callable[[str, Config], None | Awaitable[None]]] = []
-        self._config_subscribers: dict[
-            str, list[Callable[[Config], None | Awaitable[None]]]
-        ] = {}
+        self._config_subscribers: dict[str, list[Callable[[Config], None | Awaitable[None]]]] = {}
 
         # Connection state
         self._closed = False

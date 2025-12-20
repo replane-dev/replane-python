@@ -79,9 +79,7 @@ class NotCondition:
 
 
 # Union type for all conditions
-Condition = (
-    PropertyCondition | SegmentationCondition | AndCondition | OrCondition | NotCondition
-)
+Condition = PropertyCondition | SegmentationCondition | AndCondition | OrCondition | NotCondition
 
 
 @dataclass(frozen=True, slots=True)
