@@ -17,7 +17,8 @@ class Context(TypedDict, total=False):
     Context is a dictionary of string keys to primitive values.
     Common properties include user IDs, subscription plans, regions, etc.
 
-    Example:
+    Example::
+
         context: Context = {
             "user_id": "user-123",
             "plan": "premium",

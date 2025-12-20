@@ -45,48 +45,61 @@ This page provides detailed API documentation for the Replane Python SDK.
 
 ```{eval-rst}
 .. autoclass:: replane.Config
-   :members:
-   :undoc-members:
+   :no-index:
 ```
+
+**Attributes:**
+
+- `name` (str): Unique identifier for this config.
+- `value` (Any): The base/default value returned when no overrides match.
+- `overrides` (tuple[Override, ...]): List of override rules evaluated in order.
 
 ### Override
 
 ```{eval-rst}
 .. autoclass:: replane.Override
-   :members:
-   :undoc-members:
+   :no-index:
 ```
+
+**Attributes:**
+
+- `name` (str): Name/description of this override rule.
+- `conditions` (tuple[Condition, ...]): Conditions that must all match.
+- `value` (Any): Value to return when conditions match.
 
 ### Conditions
 
 ```{eval-rst}
 .. autoclass:: replane.PropertyCondition
-   :members:
-   :undoc-members:
+   :no-index:
 
 .. autoclass:: replane.SegmentationCondition
-   :members:
-   :undoc-members:
+   :no-index:
 
 .. autoclass:: replane.AndCondition
-   :members:
-   :undoc-members:
+   :no-index:
 
 .. autoclass:: replane.OrCondition
-   :members:
-   :undoc-members:
+   :no-index:
 
 .. autoclass:: replane.NotCondition
-   :members:
-   :undoc-members:
+   :no-index:
 ```
 
 ### Context
 
-```{eval-rst}
-.. autoclass:: replane.Context
-   :members:
-   :undoc-members:
+Context is a `TypedDict` representing runtime context for override evaluation.
+It's a dictionary with string keys and primitive values (`str`, `int`, `float`, `bool`, or `None`).
+
+```python
+from replane import Context
+
+context: Context = {
+    "user_id": "user-123",
+    "plan": "premium",
+    "region": "us-east",
+    "is_beta": True,
+}
 ```
 
 ## Errors
