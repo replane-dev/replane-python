@@ -7,7 +7,7 @@ for feature flags and dynamic configuration.
 import atexit
 import os
 
-from flask import Flask, g, jsonify, request
+from flask import Flask, jsonify, request
 
 from replane import SyncReplaneClient
 
@@ -78,15 +78,22 @@ def upload():
     max_bytes = max_size_mb * 1024 * 1024
 
     if content_length > max_bytes:
-        return jsonify({
-            "error": "File too large",
-            "max_size_mb": max_size_mb,
-        }), 413
+        return (
+            jsonify(
+                {
+                    "error": "File too large",
+                    "max_size_mb": max_size_mb,
+                }
+            ),
+            413,
+        )
 
-    return jsonify({
-        "message": "Upload successful",
-        "allowed_size_mb": max_size_mb,
-    })
+    return jsonify(
+        {
+            "message": "Upload successful",
+            "allowed_size_mb": max_size_mb,
+        }
+    )
 
 
 @app.route("/api/items")
@@ -106,11 +113,13 @@ def get_items():
         {"id": 3, "name": "Item 3"},
     ]
 
-    return jsonify({
-        "items": items,
-        "rate_limit": rate_limit,
-        "user_plan": ctx["plan"],
-    })
+    return jsonify(
+        {
+            "items": items,
+            "rate_limit": rate_limit,
+            "user_plan": ctx["plan"],
+        }
+    )
 
 
 @app.route("/api/config")
@@ -118,14 +127,16 @@ def get_config():
     """Debug endpoint to view current config values."""
     ctx = get_user_context()
 
-    return jsonify({
-        "context": ctx,
-        "configs": {
-            "new-dashboard-enabled": replane_client.get("new-dashboard-enabled", context=ctx),
-            "rate-limit": replane_client.get("rate-limit", context=ctx),
-            "max-upload-size-mb": replane_client.get("max-upload-size-mb", context=ctx),
-        },
-    })
+    return jsonify(
+        {
+            "context": ctx,
+            "configs": {
+                "new-dashboard-enabled": replane_client.get("new-dashboard-enabled", context=ctx),
+                "rate-limit": replane_client.get("rate-limit", context=ctx),
+                "max-upload-size-mb": replane_client.get("max-upload-size-mb", context=ctx),
+            },
+        }
+    )
 
 
 if __name__ == "__main__":

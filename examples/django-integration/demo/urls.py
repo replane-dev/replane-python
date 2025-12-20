@@ -1,8 +1,7 @@
 """URL patterns for the demo app."""
 
-from django.urls import path
-
 from demo.views import ConfigView, HealthView, IndexView, ItemsView, UploadView
+from django.urls import path
 
 urlpatterns = [
     path("", IndexView.as_view(), name="index"),

@@ -110,6 +110,10 @@ target-version = "py310"
 ignore_missing_imports = true
 no_site_packages = true
 check_untyped_defs = true
+exclude = [
+    "examples/",
+    "docs/",
+]
 
 [[tool.mypy.overrides]]
 module = "tests.*"

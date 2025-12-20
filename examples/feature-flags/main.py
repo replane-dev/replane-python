@@ -76,7 +76,9 @@ def demo_plan_based_limits(client: SyncReplaneClient):
             default=1,
         )
 
-        print(f"{plan:12} | Rate: {rate_limit:5}/hr | Storage: {storage_gb:4}GB | Members: {max_members}")
+        print(
+            f"{plan:12} | Rate: {rate_limit:5}/hr | Storage: {storage_gb:4}GB | Members: {max_members}"
+        )
 
 
 def demo_regional_features(client: SyncReplaneClient):
@@ -175,7 +177,9 @@ def demo_complex_conditions(client: SyncReplaneClient):
             context=ctx,
             default=0,
         )
-        print(f"Plan: {ctx['plan']:10} LTV: ${ctx['ltv']:5} Region: {ctx['region']} -> {discount}% discount")
+        print(
+            f"Plan: {ctx['plan']:10} LTV: ${ctx['ltv']:5} Region: {ctx['region']} -> {discount}% discount"
+        )
 
 
 def demo_real_time_updates(client: SyncReplaneClient):

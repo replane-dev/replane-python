@@ -28,10 +28,12 @@ class TestSyncClientConnection:
 
     def test_connect_and_get_config(self, mock_server: MockSSEServer):
         """Client connects, receives init event, and retrieves config."""
-        mock_server.send_init([
-            create_config("feature-flag", True),
-            create_config("rate-limit", 100),
-        ])
+        mock_server.send_init(
+            [
+                create_config("feature-flag", True),
+                create_config("rate-limit", 100),
+            ]
+        )
 
         client = SyncReplaneClient(
             base_url=mock_server.url,
@@ -198,10 +200,12 @@ class TestSyncClientConfigRetrieval:
 
     def test_required_configs_present(self, mock_server: MockSSEServer):
         """Required configs pass when all are present."""
-        mock_server.send_init([
-            create_config("required1", True),
-            create_config("required2", True),
-        ])
+        mock_server.send_init(
+            [
+                create_config("required1", True),
+                create_config("required2", True),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -247,19 +251,21 @@ class TestSyncClientOverrides:
 
     def test_context_override_evaluation(self, mock_server: MockSSEServer):
         """Override is applied when context matches."""
-        mock_server.send_init([
-            create_config(
-                "rate-limit",
-                100,
-                overrides=[
-                    create_override(
-                        "premium-users",
-                        1000,
-                        [create_condition("equals", "plan", "premium")],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "rate-limit",
+                    100,
+                    overrides=[
+                        create_override(
+                            "premium-users",
+                            1000,
+                            [create_condition("equals", "plan", "premium")],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -274,19 +280,21 @@ class TestSyncClientOverrides:
 
     def test_default_context(self, mock_server: MockSSEServer):
         """Default context is applied to all gets."""
-        mock_server.send_init([
-            create_config(
-                "feature",
-                False,
-                overrides=[
-                    create_override(
-                        "beta-users",
-                        True,
-                        [create_condition("equals", "beta", True)],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "beta-users",
+                            True,
+                            [create_condition("equals", "beta", True)],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -298,24 +306,26 @@ class TestSyncClientOverrides:
 
     def test_get_context_overrides_default(self, mock_server: MockSSEServer):
         """Context in get() overrides default context."""
-        mock_server.send_init([
-            create_config(
-                "value",
-                "default",
-                overrides=[
-                    create_override(
-                        "region-override",
-                        "eu-value",
-                        [create_condition("equals", "region", "eu")],
-                    ),
-                    create_override(
-                        "region-override-us",
-                        "us-value",
-                        [create_condition("equals", "region", "us")],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "value",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "region-override",
+                            "eu-value",
+                            [create_condition("equals", "region", "eu")],
+                        ),
+                        create_override(
+                            "region-override-us",
+                            "us-value",
+                            [create_condition("equals", "region", "us")],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -341,6 +351,7 @@ class TestSyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_change(name, config):
                 changes.append((name, config.value))
 
@@ -357,10 +368,12 @@ class TestSyncClientSubscriptions:
 
     def test_subscribe_specific_config(self, mock_server: MockSSEServer):
         """Subscribe to a specific config."""
-        mock_server.send_init([
-            create_config("feature1", False),
-            create_config("feature2", False),
-        ])
+        mock_server.send_init(
+            [
+                create_config("feature1", False),
+                create_config("feature2", False),
+            ]
+        )
 
         changes: list[bool] = []
 
@@ -368,6 +381,7 @@ class TestSyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_feature1_change(config):
                 changes.append(config.value)
 
@@ -394,6 +408,7 @@ class TestSyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_change(name, config):
                 changes.append(config.value)
 
@@ -463,9 +478,11 @@ class TestSyncClientJsonValues:
 
     def test_object_value(self, mock_server: MockSSEServer):
         """Config can have object values."""
-        mock_server.send_init([
-            create_config("settings", {"theme": "dark", "fontSize": 14}),
-        ])
+        mock_server.send_init(
+            [
+                create_config("settings", {"theme": "dark", "fontSize": 14}),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -477,9 +494,11 @@ class TestSyncClientJsonValues:
 
     def test_array_value(self, mock_server: MockSSEServer):
         """Config can have array values."""
-        mock_server.send_init([
-            create_config("allowed-origins", ["example.com", "test.com"]),
-        ])
+        mock_server.send_init(
+            [
+                create_config("allowed-origins", ["example.com", "test.com"]),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -618,10 +637,12 @@ class TestSyncClientConfigValueEdgeCases:
 
     def test_unicode_value(self, mock_server: MockSSEServer):
         """Config with unicode characters."""
-        mock_server.send_init([
-            create_config("greeting", "Hello, 世界! 🌍"),
-            create_config("emoji", "🚀🎉✨"),
-        ])
+        mock_server.send_init(
+            [
+                create_config("greeting", "Hello, 世界! 🌍"),
+                create_config("emoji", "🚀🎉✨"),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -632,12 +653,14 @@ class TestSyncClientConfigValueEdgeCases:
 
     def test_special_characters_in_name(self, mock_server: MockSSEServer):
         """Config names with special characters."""
-        mock_server.send_init([
-            create_config("config-with-dashes", 1),
-            create_config("config_with_underscores", 2),
-            create_config("config.with.dots", 3),
-            create_config("config:with:colons", 4),
-        ])
+        mock_server.send_init(
+            [
+                create_config("config-with-dashes", 1),
+                create_config("config_with_underscores", 2),
+                create_config("config.with.dots", 3),
+                create_config("config:with:colons", 4),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -682,15 +705,7 @@ class TestSyncClientConfigValueEdgeCases:
 
     def test_nested_object_value(self, mock_server: MockSSEServer):
         """Config with deeply nested object."""
-        nested = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "value": "deep"
-                    }
-                }
-            }
-        }
+        nested = {"level1": {"level2": {"level3": {"value": "deep"}}}}
         mock_server.send_init([create_config("nested", nested)])
 
         with SyncReplaneClient(
@@ -718,20 +733,30 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_multiple_overrides_first_match_wins(self, mock_server: MockSSEServer):
         """First matching override wins."""
-        mock_server.send_init([
-            create_config(
-                "value",
-                "default",
-                overrides=[
-                    create_override("first", "first-value", [
-                        create_condition("equals", "tier", "premium"),
-                    ]),
-                    create_override("second", "second-value", [
-                        create_condition("equals", "tier", "premium"),
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "value",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "first",
+                            "first-value",
+                            [
+                                create_condition("equals", "tier", "premium"),
+                            ],
+                        ),
+                        create_override(
+                            "second",
+                            "second-value",
+                            [
+                                create_condition("equals", "tier", "premium"),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -742,17 +767,27 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_override_with_in_operator(self, mock_server: MockSSEServer):
         """Override using 'in' operator."""
-        mock_server.send_init([
-            create_config(
-                "feature",
-                False,
-                overrides=[
-                    create_override("vip-users", True, [
-                        {"operator": "in", "property": "plan", "value": ["pro", "enterprise"]},
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "vip-users",
+                            True,
+                            [
+                                {
+                                    "operator": "in",
+                                    "property": "plan",
+                                    "value": ["pro", "enterprise"],
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -764,17 +799,27 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_override_with_not_in_operator(self, mock_server: MockSSEServer):
         """Override using 'not_in' operator."""
-        mock_server.send_init([
-            create_config(
-                "restricted",
-                False,
-                overrides=[
-                    create_override("non-blocked", True, [
-                        {"operator": "not_in", "property": "country", "value": ["XX", "YY"]},
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "restricted",
+                    False,
+                    overrides=[
+                        create_override(
+                            "non-blocked",
+                            True,
+                            [
+                                {
+                                    "operator": "not_in",
+                                    "property": "country",
+                                    "value": ["XX", "YY"],
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -785,20 +830,38 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_override_with_numeric_comparison(self, mock_server: MockSSEServer):
         """Override using numeric comparison operators."""
-        mock_server.send_init([
-            create_config(
-                "discount",
-                0,
-                overrides=[
-                    create_override("high-spenders", 20, [
-                        {"operator": "greater_than", "property": "total_spent", "value": 1000},
-                    ]),
-                    create_override("medium-spenders", 10, [
-                        {"operator": "greater_than_or_equal", "property": "total_spent", "value": 500},
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "discount",
+                    0,
+                    overrides=[
+                        create_override(
+                            "high-spenders",
+                            20,
+                            [
+                                {
+                                    "operator": "greater_than",
+                                    "property": "total_spent",
+                                    "value": 1000,
+                                },
+                            ],
+                        ),
+                        create_override(
+                            "medium-spenders",
+                            10,
+                            [
+                                {
+                                    "operator": "greater_than_or_equal",
+                                    "property": "total_spent",
+                                    "value": 500,
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -810,18 +873,24 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_override_with_multiple_conditions_and(self, mock_server: MockSSEServer):
         """Override with multiple conditions (AND logic)."""
-        mock_server.send_init([
-            create_config(
-                "special-feature",
-                False,
-                overrides=[
-                    create_override("premium-beta", True, [
-                        create_condition("equals", "plan", "premium"),
-                        create_condition("equals", "beta", True),
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "special-feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "premium-beta",
+                            True,
+                            [
+                                create_condition("equals", "plan", "premium"),
+                                create_condition("equals", "beta", True),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -834,17 +903,23 @@ class TestSyncClientOverrideEdgeCases:
 
     def test_override_missing_context_property(self, mock_server: MockSSEServer):
         """Override doesn't match when context property is missing."""
-        mock_server.send_init([
-            create_config(
-                "feature",
-                "default",
-                overrides=[
-                    create_override("has-user", "user-value", [
-                        create_condition("equals", "user_id", "123"),
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "has-user",
+                            "user-value",
+                            [
+                                create_condition("equals", "user_id", "123"),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         with SyncReplaneClient(
             base_url=mock_server.url,
@@ -869,6 +944,7 @@ class TestSyncClientSubscriptionEdgeCases:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def bad_subscriber(name, config):
                 raise ValueError("Intentional error")
 
@@ -913,6 +989,7 @@ class TestSyncClientSubscriptionEdgeCases:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def callback(name, config):
                 pass
 

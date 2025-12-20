@@ -14,9 +14,11 @@ class DemoConfig(AppConfig):
         """Initialize Replane client when Django starts."""
         # Avoid double initialization in development with auto-reload
         import sys
+
         if "runserver" in sys.argv and "--noreload" not in sys.argv:
             # Only initialize in the reloader process, not the main process
             import os
+
             if os.environ.get("RUN_MAIN") != "true":
                 return
 

@@ -1,9 +1,8 @@
 """Django views demonstrating Replane integration."""
 
+from demo.replane_client import get_replane
 from django.http import JsonResponse
 from django.views import View
-
-from demo.replane_client import get_replane
 
 
 class IndexView(View):
@@ -17,15 +16,19 @@ class IndexView(View):
         new_dashboard = client.get("new-dashboard-enabled", context=ctx)
 
         if new_dashboard:
-            return JsonResponse({
-                "message": "Welcome to the new dashboard!",
-                "version": "v2",
-            })
+            return JsonResponse(
+                {
+                    "message": "Welcome to the new dashboard!",
+                    "version": "v2",
+                }
+            )
         else:
-            return JsonResponse({
-                "message": "Welcome!",
-                "version": "v1",
-            })
+            return JsonResponse(
+                {
+                    "message": "Welcome!",
+                    "version": "v1",
+                }
+            )
 
 
 class ItemsView(View):
@@ -44,11 +47,13 @@ class ItemsView(View):
             {"id": 3, "name": "Item 3"},
         ]
 
-        return JsonResponse({
-            "items": items,
-            "rate_limit": rate_limit,
-            "user_plan": ctx.get("plan", "unknown"),
-        })
+        return JsonResponse(
+            {
+                "items": items,
+                "rate_limit": rate_limit,
+                "user_plan": ctx.get("plan", "unknown"),
+            }
+        )
 
 
 class UploadView(View):
@@ -73,10 +78,12 @@ class UploadView(View):
                 status=413,
             )
 
-        return JsonResponse({
-            "message": "Upload successful",
-            "allowed_size_mb": max_size_mb,
-        })
+        return JsonResponse(
+            {
+                "message": "Upload successful",
+                "allowed_size_mb": max_size_mb,
+            }
+        )
 
 
 class ConfigView(View):
@@ -86,15 +93,17 @@ class ConfigView(View):
         client = get_replane()
         ctx = getattr(request, "replane_context", {})
 
-        return JsonResponse({
-            "context": ctx,
-            "configs": {
-                "new-dashboard-enabled": client.get("new-dashboard-enabled", context=ctx),
-                "rate-limit": client.get("rate-limit", context=ctx),
-                "max-upload-size-mb": client.get("max-upload-size-mb", context=ctx),
-                "maintenance-mode": client.get("maintenance-mode", context=ctx),
-            },
-        })
+        return JsonResponse(
+            {
+                "context": ctx,
+                "configs": {
+                    "new-dashboard-enabled": client.get("new-dashboard-enabled", context=ctx),
+                    "rate-limit": client.get("rate-limit", context=ctx),
+                    "max-upload-size-mb": client.get("max-upload-size-mb", context=ctx),
+                    "maintenance-mode": client.get("maintenance-mode", context=ctx),
+                },
+            }
+        )
 
 
 class HealthView(View):
@@ -107,7 +116,9 @@ class HealthView(View):
         except RuntimeError:
             replane_connected = False
 
-        return JsonResponse({
-            "status": "healthy",
-            "replane_connected": replane_connected,
-        })
+        return JsonResponse(
+            {
+                "status": "healthy",
+                "replane_connected": replane_connected,
+            }
+        )

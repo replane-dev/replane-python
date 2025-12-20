@@ -11,7 +11,7 @@ import queue
 import socketserver
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 

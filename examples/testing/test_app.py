@@ -4,10 +4,9 @@ This module shows various patterns for testing code that uses Replane.
 """
 
 import pytest
+from app import OrderService, calculate_discount, get_rate_limit, is_feature_enabled
 
 from replane.testing import InMemoryReplaneClient, create_test_client
-
-from app import OrderService, calculate_discount, get_rate_limit, is_feature_enabled
 
 
 class TestBasicUsage:
@@ -15,11 +14,13 @@ class TestBasicUsage:
 
     def test_simple_config_values(self):
         """Test reading simple config values."""
-        client = create_test_client({
-            "rate-limit": 100,
-            "feature-enabled": True,
-            "api-version": "v2",
-        })
+        client = create_test_client(
+            {
+                "rate-limit": 100,
+                "feature-enabled": True,
+                "api-version": "v2",
+            }
+        )
 
         assert client.get("rate-limit") == 100
         assert client.get("feature-enabled") is True
@@ -170,10 +171,12 @@ class TestApplicationCode:
 
     def test_calculate_discount(self):
         """Test the calculate_discount function."""
-        client = create_test_client({
-            "base-discount": 10,
-            "premium-bonus": 15,
-        })
+        client = create_test_client(
+            {
+                "base-discount": 10,
+                "premium-bonus": 15,
+            }
+        )
 
         # Regular user gets base discount
         assert calculate_discount(client, "user-1", is_premium=False) == 10

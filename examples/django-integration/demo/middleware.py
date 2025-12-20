@@ -1,8 +1,7 @@
 """Django middleware for Replane integration."""
 
-from django.http import JsonResponse
-
 from demo.replane_client import get_replane
+from django.http import JsonResponse
 
 
 class ReplaneMiddleware:

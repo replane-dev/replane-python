@@ -13,7 +13,6 @@ from replane.errors import (
     AuthenticationError,
     ClientClosedError,
     ConfigNotFoundError,
-    MissingDependencyError,
     TimeoutError,
 )
 
@@ -30,10 +29,12 @@ class TestAsyncClientConnection:
 
     async def test_connect_and_get_config(self, mock_server: MockSSEServer):
         """Client connects, receives init event, and retrieves config."""
-        mock_server.send_init([
-            create_config("feature-flag", True),
-            create_config("rate-limit", 100),
-        ])
+        mock_server.send_init(
+            [
+                create_config("feature-flag", True),
+                create_config("rate-limit", 100),
+            ]
+        )
 
         client = AsyncReplaneClient(
             base_url=mock_server.url,
@@ -199,10 +200,12 @@ class TestAsyncClientConfigRetrieval:
 
     async def test_required_configs_present(self, mock_server: MockSSEServer):
         """Required configs pass when all are present."""
-        mock_server.send_init([
-            create_config("required1", True),
-            create_config("required2", True),
-        ])
+        mock_server.send_init(
+            [
+                create_config("required1", True),
+                create_config("required2", True),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -248,19 +251,21 @@ class TestAsyncClientOverrides:
 
     async def test_context_override_evaluation(self, mock_server: MockSSEServer):
         """Override is applied when context matches."""
-        mock_server.send_init([
-            create_config(
-                "rate-limit",
-                100,
-                overrides=[
-                    create_override(
-                        "premium-users",
-                        1000,
-                        [create_condition("equals", "plan", "premium")],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "rate-limit",
+                    100,
+                    overrides=[
+                        create_override(
+                            "premium-users",
+                            1000,
+                            [create_condition("equals", "plan", "premium")],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -275,19 +280,21 @@ class TestAsyncClientOverrides:
 
     async def test_default_context(self, mock_server: MockSSEServer):
         """Default context is applied to all gets."""
-        mock_server.send_init([
-            create_config(
-                "feature",
-                False,
-                overrides=[
-                    create_override(
-                        "beta-users",
-                        True,
-                        [create_condition("equals", "beta", True)],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "beta-users",
+                            True,
+                            [create_condition("equals", "beta", True)],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -299,24 +306,26 @@ class TestAsyncClientOverrides:
 
     async def test_get_context_overrides_default(self, mock_server: MockSSEServer):
         """Context in get() overrides default context."""
-        mock_server.send_init([
-            create_config(
-                "value",
-                "default",
-                overrides=[
-                    create_override(
-                        "region-override",
-                        "eu-value",
-                        [create_condition("equals", "region", "eu")],
-                    ),
-                    create_override(
-                        "region-override-us",
-                        "us-value",
-                        [create_condition("equals", "region", "us")],
-                    ),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "value",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "region-override",
+                            "eu-value",
+                            [create_condition("equals", "region", "eu")],
+                        ),
+                        create_override(
+                            "region-override-us",
+                            "us-value",
+                            [create_condition("equals", "region", "us")],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -342,6 +351,7 @@ class TestAsyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_change(name, config):
                 changes.append((name, config.value))
 
@@ -366,6 +376,7 @@ class TestAsyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             async def on_change(name, config):
                 changes.append((name, config.value))
 
@@ -382,10 +393,12 @@ class TestAsyncClientSubscriptions:
 
     async def test_subscribe_specific_config(self, mock_server: MockSSEServer):
         """Subscribe to a specific config."""
-        mock_server.send_init([
-            create_config("feature1", False),
-            create_config("feature2", False),
-        ])
+        mock_server.send_init(
+            [
+                create_config("feature1", False),
+                create_config("feature2", False),
+            ]
+        )
 
         changes: list[bool] = []
 
@@ -393,6 +406,7 @@ class TestAsyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_feature1_change(config):
                 changes.append(config.value)
 
@@ -419,6 +433,7 @@ class TestAsyncClientSubscriptions:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def on_change(name, config):
                 changes.append(config.value)
 
@@ -488,9 +503,11 @@ class TestAsyncClientJsonValues:
 
     async def test_object_value(self, mock_server: MockSSEServer):
         """Config can have object values."""
-        mock_server.send_init([
-            create_config("settings", {"theme": "dark", "fontSize": 14}),
-        ])
+        mock_server.send_init(
+            [
+                create_config("settings", {"theme": "dark", "fontSize": 14}),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -502,9 +519,11 @@ class TestAsyncClientJsonValues:
 
     async def test_array_value(self, mock_server: MockSSEServer):
         """Config can have array values."""
-        mock_server.send_init([
-            create_config("allowed-origins", ["example.com", "test.com"]),
-        ])
+        mock_server.send_init(
+            [
+                create_config("allowed-origins", ["example.com", "test.com"]),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -630,10 +649,12 @@ class TestAsyncClientConfigValueEdgeCases:
 
     async def test_unicode_value(self, mock_server: MockSSEServer):
         """Config with unicode characters."""
-        mock_server.send_init([
-            create_config("greeting", "Hello, 世界! 🌍"),
-            create_config("emoji", "🚀🎉✨"),
-        ])
+        mock_server.send_init(
+            [
+                create_config("greeting", "Hello, 世界! 🌍"),
+                create_config("emoji", "🚀🎉✨"),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -655,13 +676,7 @@ class TestAsyncClientConfigValueEdgeCases:
 
     async def test_nested_object_value(self, mock_server: MockSSEServer):
         """Config with deeply nested object."""
-        nested = {
-            "level1": {
-                "level2": {
-                    "level3": {"value": "deep"}
-                }
-            }
-        }
+        nested = {"level1": {"level2": {"level3": {"value": "deep"}}}}
         mock_server.send_init([create_config("nested", nested)])
 
         async with AsyncReplaneClient(
@@ -677,20 +692,30 @@ class TestAsyncClientOverrideEdgeCases:
 
     async def test_multiple_overrides_first_match_wins(self, mock_server: MockSSEServer):
         """First matching override wins."""
-        mock_server.send_init([
-            create_config(
-                "value",
-                "default",
-                overrides=[
-                    create_override("first", "first-value", [
-                        create_condition("equals", "tier", "premium"),
-                    ]),
-                    create_override("second", "second-value", [
-                        create_condition("equals", "tier", "premium"),
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "value",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "first",
+                            "first-value",
+                            [
+                                create_condition("equals", "tier", "premium"),
+                            ],
+                        ),
+                        create_override(
+                            "second",
+                            "second-value",
+                            [
+                                create_condition("equals", "tier", "premium"),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -700,17 +725,27 @@ class TestAsyncClientOverrideEdgeCases:
 
     async def test_override_with_in_operator(self, mock_server: MockSSEServer):
         """Override using 'in' operator."""
-        mock_server.send_init([
-            create_config(
-                "feature",
-                False,
-                overrides=[
-                    create_override("vip-users", True, [
-                        {"operator": "in", "property": "plan", "value": ["pro", "enterprise"]},
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "vip-users",
+                            True,
+                            [
+                                {
+                                    "operator": "in",
+                                    "property": "plan",
+                                    "value": ["pro", "enterprise"],
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -721,17 +756,27 @@ class TestAsyncClientOverrideEdgeCases:
 
     async def test_override_with_numeric_comparison(self, mock_server: MockSSEServer):
         """Override using numeric comparison operators."""
-        mock_server.send_init([
-            create_config(
-                "discount",
-                0,
-                overrides=[
-                    create_override("high-spenders", 20, [
-                        {"operator": "greater_than", "property": "total_spent", "value": 1000},
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "discount",
+                    0,
+                    overrides=[
+                        create_override(
+                            "high-spenders",
+                            20,
+                            [
+                                {
+                                    "operator": "greater_than",
+                                    "property": "total_spent",
+                                    "value": 1000,
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -742,18 +787,24 @@ class TestAsyncClientOverrideEdgeCases:
 
     async def test_override_with_multiple_conditions_and(self, mock_server: MockSSEServer):
         """Override with multiple conditions (AND logic)."""
-        mock_server.send_init([
-            create_config(
-                "special-feature",
-                False,
-                overrides=[
-                    create_override("premium-beta", True, [
-                        create_condition("equals", "plan", "premium"),
-                        create_condition("equals", "beta", True),
-                    ]),
-                ],
-            ),
-        ])
+        mock_server.send_init(
+            [
+                create_config(
+                    "special-feature",
+                    False,
+                    overrides=[
+                        create_override(
+                            "premium-beta",
+                            True,
+                            [
+                                create_condition("equals", "plan", "premium"),
+                                create_condition("equals", "beta", True),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         async with AsyncReplaneClient(
             base_url=mock_server.url,
@@ -766,7 +817,9 @@ class TestAsyncClientOverrideEdgeCases:
 class TestAsyncClientSubscriptionEdgeCases:
     """Test edge cases for subscriptions."""
 
-    async def test_subscriber_exception_doesnt_break_other_subscribers(self, mock_server: MockSSEServer):
+    async def test_subscriber_exception_doesnt_break_other_subscribers(
+        self, mock_server: MockSSEServer
+    ):
         """Exception in one subscriber doesn't prevent others from being called."""
         mock_server.send_init([create_config("feature", False)])
 
@@ -776,6 +829,7 @@ class TestAsyncClientSubscriptionEdgeCases:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             def bad_subscriber(name, config):
                 raise ValueError("Intentional error")
 
@@ -801,6 +855,7 @@ class TestAsyncClientSubscriptionEdgeCases:
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
+
             async def bad_async_subscriber(name, config):
                 raise ValueError("Intentional async error")
 
