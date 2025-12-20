@@ -1,27 +1,59 @@
-Installation
-============
+# Installation
 
-**replane** supports Python >= 3.8.
+## Requirements
 
-## Installing with `pip`
+- Python 3.10 or higher
+- No additional dependencies for sync client
+- `httpx` for async client (optional)
 
-**replane** is available [on PyPI](https://pypi.org/project/replane/). Just run
+## Installing with pip
+
+The Replane Python SDK is available on [PyPI](https://pypi.org/project/replane/).
+
+### Basic installation (sync client only)
 
 ```bash
 pip install replane
 ```
 
+This installs the SDK with zero dependencies. The synchronous client uses only Python's standard library.
+
+### With async support
+
+```bash
+pip install replane[async]
+```
+
+This adds [httpx](https://www.python-httpx.org/) as a dependency, enabling the `AsyncReplaneClient`.
+
 ## Installing from source
 
-To install **replane** from source, first clone [the repository](https://github.com/replane-dev/replane-python):
+To install from source, first clone the repository:
 
 ```bash
 git clone https://github.com/replane-dev/replane-python.git
 cd replane-python
 ```
 
-Then run
+Then install in development mode:
 
 ```bash
-pip install -e .
+pip install -e ".[dev]"
+```
+
+This installs all development dependencies including test and documentation tools.
+
+## Verifying installation
+
+You can verify the installation by checking the version:
+
+```python
+import replane
+print(replane.VERSION)
+```
+
+Or from the command line:
+
+```bash
+python -c "import replane; print(replane.VERSION)"
 ```
