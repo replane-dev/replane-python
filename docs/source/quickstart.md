@@ -21,20 +21,20 @@ from replane import SyncReplaneClient
 with SyncReplaneClient(
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
-) as client:
+) as replane:
     # Get a simple config value
-    rate_limit = client.get("rate-limit")
+    rate_limit = replane.get("rate-limit")
     print(f"Rate limit: {rate_limit}")
 
     # Get with context for override evaluation
-    feature_enabled = client.get(
+    feature_enabled = replane.get(
         "new-feature",
         context={"user_id": "user-123", "plan": "premium"},
     )
     print(f"Feature enabled: {feature_enabled}")
 
     # Get with fallback default
-    timeout = client.get("request-timeout", default=30)
+    timeout = replane.get("request-timeout", default=30)
     print(f"Timeout: {timeout}")
 ```
 
