@@ -471,8 +471,8 @@ class TestAsyncClientReconnection:
             mock_server.disconnect()
             mock_server.send_init([create_config("feature", False)])
 
-            # Wait for reconnection
-            await asyncio.sleep(0.5)
+            # Wait for reconnection (need > 1s for the check timeout + buffer for retry)
+            await asyncio.sleep(1.5)
 
             # Should have the new value after reconnect
             assert client.get("feature") is False
