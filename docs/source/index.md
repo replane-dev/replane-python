@@ -19,12 +19,12 @@ from replane import SyncReplaneClient
 with SyncReplaneClient(
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
-) as client:
+) as replane:
     # Get a config value
-    rate_limit = client.get("rate-limit")
+    rate_limit = replane.get("rate-limit")
 
     # Get with context for override evaluation
-    feature_enabled = client.get(
+    feature_enabled = replane.get(
         "new-feature",
         context={"user_id": user.id, "plan": user.plan},
     )

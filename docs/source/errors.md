@@ -50,8 +50,8 @@ try:
     with SyncReplaneClient(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
-    ) as client:
-        value = client.get("my-config")
+    ) as replane:
+        value = replane.get("my-config")
 except ConfigNotFoundError as e:
     print(f"Config '{e.config_name}' not found")
 except TimeoutError as e:
@@ -68,7 +68,7 @@ except ReplaneError as e:
 from replane import ReplaneError, ErrorCode
 
 try:
-    value = client.get("config")
+    value = replane.get("config")
 except ReplaneError as e:
     match e.code:
         case ErrorCode.NOT_FOUND:
@@ -95,7 +95,7 @@ Raised when requesting a config that doesn't exist.
 from replane import ConfigNotFoundError
 
 try:
-    value = client.get("nonexistent-config")
+    value = replane.get("nonexistent-config")
 except ConfigNotFoundError as e:
     print(f"Config not found: {e.config_name}")
     # Use a default value instead
@@ -109,10 +109,10 @@ except ConfigNotFoundError as e:
 
 ```python
 # With default
-value = client.get("config", default="fallback")
+value = replane.get("config", default="fallback")
 
 # With fallbacks during init
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     fallbacks={"config": "fallback"},
 )
@@ -126,7 +126,7 @@ Raised when an operation exceeds its timeout.
 from replane import TimeoutError
 
 try:
-    client.connect()
+    replane.connect()
 except TimeoutError as e:
     print(f"Connection timed out after {e.timeout_ms}ms")
 ```
@@ -137,7 +137,7 @@ except TimeoutError as e:
 **Prevention:** Increase timeout values:
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     initialization_timeout_ms=10000,  # 10 seconds
     request_timeout_ms=5000,  # 5 seconds
@@ -152,7 +152,7 @@ Raised when the SDK key is invalid or missing.
 from replane import AuthenticationError
 
 try:
-    client.connect()
+    replane.connect()
 except AuthenticationError:
     print("Check your SDK key!")
 ```
@@ -170,7 +170,7 @@ Raised when a network request fails.
 from replane import NetworkError
 
 try:
-    client.connect()
+    replane.connect()
 except NetworkError as e:
     print(f"Network error: {e.message}")
     if e.__cause__:
@@ -190,12 +190,12 @@ Raised when attempting operations on a closed client.
 ```python
 from replane import ClientClosedError
 
-client = SyncReplaneClient(...)
-client.connect()
-client.close()
+replane = SyncReplaneClient(...)
+replane.connect()
+replane.close()
 
 try:
-    client.get("config")  # Raises ClientClosedError
+    replane.get("config")  # Raises ClientClosedError
 except ClientClosedError:
     print("Client was already closed")
 ```
@@ -207,14 +207,14 @@ Raised when the client hasn't finished initializing.
 ```python
 from replane import NotInitializedError
 
-client = SyncReplaneClient(...)
-client.connect(wait=False)  # Don't wait
+replane = SyncReplaneClient(...)
+replane.connect(wait=False)  # Don't wait
 
 try:
-    client.get("config")  # May raise if not ready
+    replane.get("config")  # May raise if not ready
 except NotInitializedError:
-    client.wait_for_init()  # Wait then retry
-    value = client.get("config")
+    replane.wait_for_init()  # Wait then retry
+    value = replane.get("config")
 ```
 
 ### MissingDependencyError
@@ -225,7 +225,7 @@ Raised when using features that require optional dependencies.
 from replane import AsyncReplaneClient, MissingDependencyError
 
 try:
-    client = AsyncReplaneClient(...)
+    replane = AsyncReplaneClient(...)
 except MissingDependencyError as e:
     print(f"Missing: {e.dependency}")
     print(f"Install with: pip install replane[async]")
@@ -241,7 +241,7 @@ Errors preserve the original cause for debugging:
 
 ```python
 try:
-    client.connect()
+    replane.connect()
 except ReplaneError as e:
     print(f"Error: {e.message}")
     if e.__cause__:
@@ -259,17 +259,17 @@ except ReplaneError as e:
 ```python
 # Good: specific handling
 try:
-    value = client.get("critical-config")
+    value = replane.get("critical-config")
 except ConfigNotFoundError:
     logger.error("Critical config missing!")
     raise  # Re-raise for critical configs
 
 # Good: graceful fallback
-value = client.get("optional-config", default="safe-default")
+value = replane.get("optional-config", default="safe-default")
 
 # Bad: silently ignoring
 try:
-    value = client.get("config")
+    value = replane.get("config")
 except ReplaneError:
     pass  # Don't do this!
 ```

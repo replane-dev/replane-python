@@ -49,12 +49,12 @@ async def main():
     async with AsyncReplaneClient(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
-    ) as client:
+    ) as replane:
         # get() is sync - it reads from local cache
-        rate_limit = client.get("rate-limit")
+        rate_limit = replane.get("rate-limit")
 
         # With context
-        enabled = client.get("feature", context={"plan": "premium"})
+        enabled = replane.get("feature", context={"plan": "premium"})
 
 # Run with asyncio
 import asyncio
@@ -71,19 +71,19 @@ Configs in Replane can be any JSON-serializable value:
 
 ```python
 # Boolean (feature flags)
-dark_mode = client.get("dark-mode-enabled")  # True/False
+dark_mode = replane.get("dark-mode-enabled")  # True/False
 
 # Number (limits, thresholds)
-max_items = client.get("max-items-per-page")  # 50
+max_items = replane.get("max-items-per-page")  # 50
 
 # String
-api_version = client.get("api-version")  # "v2"
+api_version = replane.get("api-version")  # "v2"
 
 # Object
-settings = client.get("app-settings")  # {"theme": "dark", "lang": "en"}
+settings = replane.get("app-settings")  # {"theme": "dark", "lang": "en"}
 
 # Array
-allowed_origins = client.get("cors-origins")  # ["localhost", "example.com"]
+allowed_origins = replane.get("cors-origins")  # ["localhost", "example.com"]
 ```
 
 ## Using Context for Overrides
@@ -92,14 +92,14 @@ Context allows you to get different values based on runtime conditions:
 
 ```python
 # Different rate limits per plan
-rate_limit = client.get(
+rate_limit = replane.get(
     "rate-limit",
     context={"plan": user.subscription_plan}
 )
 # Returns 100 for "free", 1000 for "pro", 10000 for "enterprise"
 
 # Feature flags per user
-show_beta = client.get(
+show_beta = replane.get(
     "show-beta-features",
     context={
         "user_id": user.id,
@@ -120,13 +120,13 @@ def on_config_change(name: str, config):
     # Invalidate caches, update UI, etc.
 
 # Subscribe to all changes
-unsubscribe = client.subscribe(on_config_change)
+unsubscribe = replane.subscribe(on_config_change)
 
 # Or subscribe to specific config
 def on_rate_limit_change(config):
     update_rate_limiter(config.value)
 
-unsubscribe_rate = client.subscribe_config("rate-limit", on_rate_limit_change)
+unsubscribe_rate = replane.subscribe_config("rate-limit", on_rate_limit_change)
 
 # Later, stop receiving updates
 unsubscribe()
@@ -150,8 +150,8 @@ try:
     with SyncReplaneClient(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
-    ) as client:
-        value = client.get("my-config")
+    ) as replane:
+        value = replane.get("my-config")
 except ConfigNotFoundError as e:
     print(f"Config not found: {e.config_name}")
 except TimeoutError as e:

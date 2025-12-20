@@ -14,26 +14,26 @@ from fastapi import FastAPI, Depends
 from replane import AsyncReplaneClient
 
 # Global client instance
-replane_client: AsyncReplaneClient | None = None
+_replane: AsyncReplaneClient | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage Replane client lifecycle."""
-    global replane_client
-    replane_client = AsyncReplaneClient(
+    global _replane
+    _replane = AsyncReplaneClient(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
     )
-    await replane_client.connect()
+    await _replane.connect()
     yield
-    await replane_client.close()
+    await _replane.close()
 
 app = FastAPI(lifespan=lifespan)
 
 def get_replane() -> AsyncReplaneClient:
     """Dependency to get Replane client."""
-    assert replane_client is not None
-    return replane_client
+    assert _replane is not None
+    return _replane
 
 @app.get("/items")
 async def get_items(replane: AsyncReplaneClient = Depends(get_replane)):
@@ -109,22 +109,22 @@ from replane import SyncReplaneClient
 app = Flask(__name__)
 
 # Store client at module level
-replane_client: SyncReplaneClient | None = None
+_replane: SyncReplaneClient | None = None
 
 def get_replane() -> SyncReplaneClient:
-    global replane_client
-    if replane_client is None:
-        replane_client = SyncReplaneClient(
+    global _replane
+    if _replane is None:
+        _replane = SyncReplaneClient(
             base_url="https://replane.example.com",
             sdk_key="sk_live_...",
         )
-        replane_client.connect()
-    return replane_client
+        _replane.connect()
+    return _replane
 
 @app.route("/items")
 def get_items():
-    client = get_replane()
-    max_items = client.get("max-items-per-page")
+    replane = get_replane()
+    max_items = replane.get("max-items-per-page")
     return {"max_items": max_items}
 ```
 
@@ -138,24 +138,24 @@ def create_app():
     app = Flask(__name__)
 
     # Store in app config
-    app.replane_client = None
+    app.replane = None
 
     @app.before_request
     def init_replane():
-        if app.replane_client is None:
-            app.replane_client = SyncReplaneClient(
+        if app.replane is None:
+            app.replane = SyncReplaneClient(
                 base_url=app.config["REPLANE_URL"],
                 sdk_key=app.config["REPLANE_SDK_KEY"],
             )
-            app.replane_client.connect()
+            app.replane.connect()
 
     return app
 
 # In routes
 @app.route("/features")
 def features():
-    client = current_app.replane_client
-    return {"enabled": client.get("feature-enabled")}
+    replane = current_app.replane
+    return {"enabled": replane.get("feature-enabled")}
 ```
 
 ### Flask Extension Pattern
@@ -166,7 +166,7 @@ from replane import SyncReplaneClient
 
 class FlaskReplane:
     def __init__(self, app: Flask | None = None):
-        self._client: SyncReplaneClient | None = None
+        self._replane: SyncReplaneClient | None = None
         if app is not None:
             self.init_app(app)
 
@@ -175,19 +175,19 @@ class FlaskReplane:
 
         @app.teardown_appcontext
         def teardown(exception):
-            if self._client is not None:
-                self._client.close()
+            if self._replane is not None:
+                self._replane.close()
 
     @property
     def client(self) -> SyncReplaneClient:
-        if self._client is None:
+        if self._replane is None:
             from flask import current_app
-            self._client = SyncReplaneClient(
+            self._replane = SyncReplaneClient(
                 base_url=current_app.config["REPLANE_URL"],
                 sdk_key=current_app.config["REPLANE_SDK_KEY"],
             )
-            self._client.connect()
-        return self._client
+            self._replane.connect()
+        return self._replane
 
 # Usage
 replane = FlaskReplane()
@@ -219,27 +219,27 @@ REPLANE_SDK_KEY = "sk_live_..."
 from django.conf import settings
 from replane import SyncReplaneClient
 
-_client: SyncReplaneClient | None = None
+_replane: SyncReplaneClient | None = None
 
-def get_client() -> SyncReplaneClient:
-    global _client
-    if _client is None:
-        _client = SyncReplaneClient(
+def get_replane() -> SyncReplaneClient:
+    global _replane
+    if _replane is None:
+        _replane = SyncReplaneClient(
             base_url=settings.REPLANE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
         )
-        _client.connect()
-    return _client
+        _replane.connect()
+    return _replane
 
 # views.py
 from django.http import JsonResponse
-from .replane_client import get_client
+from .replane_client import get_replane
 
 def features_view(request):
-    client = get_client()
+    replane = get_replane()
     context = {"user_id": str(request.user.id)} if request.user.is_authenticated else {}
     return JsonResponse({
-        "feature_enabled": client.get("feature", context=context),
+        "feature_enabled": replane.get("feature", context=context),
     })
 ```
 
@@ -250,26 +250,26 @@ def features_view(request):
 from django.conf import settings
 from replane import AsyncReplaneClient
 
-_client: AsyncReplaneClient | None = None
+_replane: AsyncReplaneClient | None = None
 
-async def get_client() -> AsyncReplaneClient:
-    global _client
-    if _client is None:
-        _client = AsyncReplaneClient(
+async def get_replane() -> AsyncReplaneClient:
+    global _replane
+    if _replane is None:
+        _replane = AsyncReplaneClient(
             base_url=settings.REPLANE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
         )
-        await _client.connect()
-    return _client
+        await _replane.connect()
+    return _replane
 
 # views.py
 from django.http import JsonResponse
-from .replane_client import get_client
+from .replane_client import get_replane
 
 async def features_view(request):
-    client = await get_client()
+    replane = await get_replane()
     return JsonResponse({
-        "feature_enabled": client.get("feature"),
+        "feature_enabled": replane.get("feature"),
     })
 ```
 
@@ -300,22 +300,22 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 from replane import AsyncReplaneClient
 
-replane_client: AsyncReplaneClient | None = None
+_replane: AsyncReplaneClient | None = None
 
 async def startup():
-    global replane_client
-    replane_client = AsyncReplaneClient(
+    global _replane
+    _replane = AsyncReplaneClient(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
     )
-    await replane_client.connect()
+    await _replane.connect()
 
 async def shutdown():
-    if replane_client:
-        await replane_client.close()
+    if _replane:
+        await _replane.close()
 
 async def homepage(request):
-    feature = replane_client.get("feature")
+    feature = _replane.get("feature")
     return JSONResponse({"feature": feature})
 
 app = Starlette(
@@ -351,9 +351,9 @@ async def create_app():
     return app
 
 async def handler(request):
-    client = request.app["replane"]
+    replane = request.app["replane"]
     return web.json_response({
-        "feature": client.get("feature"),
+        "feature": replane.get("feature"),
     })
 
 if __name__ == "__main__":

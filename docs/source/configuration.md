@@ -9,7 +9,7 @@ Both `SyncReplaneClient` and `AsyncReplaneClient` accept the same configuration 
 ```python
 from replane import SyncReplaneClient
 
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     # Required
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
@@ -60,7 +60,7 @@ Default context applied to all `get()` calls. This is merged with any context pa
 
 ```python
 # Set default context
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     context={
         "environment": "production",
@@ -69,10 +69,10 @@ client = SyncReplaneClient(
 )
 
 # This call uses the default context
-value = client.get("config-name")
+value = replane.get("config-name")
 
 # This merges with default context
-value = client.get("config-name", context={"user_id": "123"})
+value = replane.get("config-name", context={"user_id": "123"})
 # Effective context: {"environment": "production", "region": "us-east", "user_id": "123"}
 ```
 
@@ -83,7 +83,7 @@ value = client.get("config-name", context={"user_id": "123"})
 Fallback values used when configs can't be loaded from the server. This is useful for resilience - your application can still function with sensible defaults if the Replane server is unavailable.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     fallbacks={
         "rate-limit": 100,
@@ -104,7 +104,7 @@ Fallbacks are used in two scenarios:
 List of config names that must be present after initialization. If any required config is missing, initialization will fail with a `ConfigNotFoundError`.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     required=["rate-limit", "feature-enabled"],
 )
@@ -120,7 +120,7 @@ This is useful for catching configuration errors early rather than at runtime.
 Timeout for individual HTTP requests to the Replane server.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     request_timeout_ms=5000,  # 5 seconds
 )
@@ -133,7 +133,7 @@ client = SyncReplaneClient(
 Maximum time to wait for the client to initialize and receive configs from the server.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     initialization_timeout_ms=10000,  # 10 seconds
 )
@@ -148,7 +148,7 @@ If initialization times out, a `TimeoutError` is raised.
 Initial delay between retry attempts when the connection fails. The delay increases exponentially with each retry (up to 30 seconds max).
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     retry_delay_ms=500,  # Start with 0.5 seconds
 )
@@ -161,7 +161,7 @@ client = SyncReplaneClient(
 Maximum time without receiving any SSE events before the connection is considered stale and reconnected. The server sends periodic keepalive pings, so this timeout should be longer than the server's ping interval.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     inactivity_timeout_ms=60000,  # 60 seconds
 )
@@ -174,7 +174,7 @@ client = SyncReplaneClient(
 Enable debug logging to see detailed information about all client activity. This is useful for troubleshooting connection issues, understanding when configs are loaded, and diagnosing override evaluation.
 
 ```python
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     ...,
     debug=True,  # Enable debug logging
 )
@@ -207,39 +207,39 @@ If you prefer not to use context managers, you can manage the client lifecycle m
 ### Sync Client
 
 ```python
-client = SyncReplaneClient(base_url="...", sdk_key="...")
+replane = SyncReplaneClient(base_url="...", sdk_key="...")
 
 # Connect and wait for initialization
-client.connect()  # Blocks until ready
+replane.connect()  # Blocks until ready
 
 try:
-    value = client.get("config")
+    value = replane.get("config")
 finally:
-    client.close()
+    replane.close()
 ```
 
 You can also connect without waiting:
 
 ```python
-client.connect(wait=False)  # Returns immediately
+replane.connect(wait=False)  # Returns immediately
 
 # Do other initialization...
 
 # Wait for configs when needed
-client.wait_for_init()
+replane.wait_for_init()
 ```
 
 ### Async Client
 
 ```python
-client = AsyncReplaneClient(base_url="...", sdk_key="...")
+replane = AsyncReplaneClient(base_url="...", sdk_key="...")
 
-await client.connect()
+await replane.connect()
 
 try:
-    value = client.get("config")
+    value = replane.get("config")
 finally:
-    await client.close()
+    await replane.close()
 ```
 
 ## Environment Variables
@@ -249,7 +249,7 @@ While the SDK doesn't read environment variables directly, a common pattern is:
 ```python
 import os
 
-client = SyncReplaneClient(
+replane = SyncReplaneClient(
     base_url=os.environ["REPLANE_URL"],
     sdk_key=os.environ["REPLANE_SDK_KEY"],
 )
