@@ -425,11 +425,12 @@ class SyncReplaneClient:
         parser = SSEParser()
         last_event_time = time.monotonic()
 
-        # Set socket timeout for inactivity detection
-        # Access internal socket for timeout - implementation detail
+        # Use a short socket timeout (1s) to allow checking _stop_event frequently.
+        # We track elapsed time separately for the real inactivity timeout.
+        socket_timeout = 1.0
         sock = response.fp.raw._sock if hasattr(response.fp, "raw") else None  # type: ignore[attr-defined]
         if sock:
-            sock.settimeout(self._inactivity_timeout)
+            sock.settimeout(socket_timeout)
 
         buffer_size = 4096
 
@@ -456,10 +457,12 @@ class SyncReplaneClient:
                     self._handle_event(event)
 
             except socket.timeout:
+                # Check if we've exceeded the inactivity timeout
                 elapsed = time.monotonic() - last_event_time
                 if elapsed > self._inactivity_timeout:
                     logger.debug("SSE inactivity timeout, reconnecting...")
                     break
+                # Otherwise, just loop and check _stop_event again
 
             except Exception as e:
                 if self._stop_event.is_set():
