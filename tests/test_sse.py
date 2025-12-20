@@ -1,7 +1,5 @@
 """Tests for SSE parser."""
 
-import pytest
-
 from replane._sse import SSEParser, parse_sse_stream
 
 

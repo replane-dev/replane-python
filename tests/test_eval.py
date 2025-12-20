@@ -1,7 +1,5 @@
 """Tests for override evaluation logic."""
 
-import pytest
-
 from replane._eval import (
     evaluate_condition,
     evaluate_config,

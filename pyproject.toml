@@ -47,6 +47,13 @@ dev = [
     "build",
     "setuptools",
     "wheel",
+    "isort",
+    "black",
+    "sphinx",
+    "myst-parser",
+    "sphinx-copybutton",
+    "sphinx-autodoc-typehints",
+    "furo",
 ]
 
 [tool.setuptools.packages.find]
