@@ -359,20 +359,23 @@ class SyncReplaneClient:
         )
 
         # Create connection
+        # Note: SSE connections are long-lived, so we use the inactivity timeout
+        # rather than the short request timeout. The inactivity timeout is used
+        # for detecting dead connections during streaming.
         conn: http.client.HTTPConnection
         if is_https:
             context = ssl.create_default_context()
             conn = http.client.HTTPSConnection(
                 host,
                 port,
-                timeout=self._request_timeout,
+                timeout=self._inactivity_timeout,
                 context=context,
             )
         else:
             conn = http.client.HTTPConnection(
                 host,
                 port,
-                timeout=self._request_timeout,
+                timeout=self._inactivity_timeout,
             )
 
         try:
