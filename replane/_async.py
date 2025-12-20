@@ -432,16 +432,28 @@ class AsyncReplaneClient:
         parser = SSEParser()
         iterator = response.aiter_text().__aiter__()
 
+        loop = asyncio.get_running_loop()
+        last_event_time = loop.time()
+
+        # Use a short timeout (1s) to allow checking _closed frequently.
+        # We track elapsed time separately for the real inactivity timeout.
+        check_timeout = 1.0
+
         while not self._closed:
             try:
-                # Wait for the next chunk with inactivity timeout
                 chunk = await asyncio.wait_for(
                     iterator.__anext__(),
-                    timeout=self._inactivity_timeout,
+                    timeout=check_timeout,
                 )
+                last_event_time = loop.time()
             except asyncio.TimeoutError:
-                logger.debug("SSE inactivity timeout, reconnecting...")
-                break
+                # Check if we've exceeded the inactivity timeout
+                elapsed = loop.time() - last_event_time
+                if elapsed > self._inactivity_timeout:
+                    logger.debug("SSE inactivity timeout, reconnecting...")
+                    break
+                # Otherwise, just loop and check _closed again
+                continue
             except StopAsyncIteration:
                 logger.debug("SSE stream ended")
                 break
