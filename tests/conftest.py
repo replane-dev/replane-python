@@ -25,6 +25,7 @@ def mock_server():
     server = MockSSEServer(port=0)  # Pick available port
     server.start()
     yield server
+    # Stop the server (this will also disconnect clients)
     server.stop()
 
 

@@ -480,3 +480,409 @@ class TestAsyncClientJsonValues:
             origins = client.get("allowed-origins")
             assert origins == ["example.com", "test.com"]
             assert "example.com" in origins
+
+
+class TestAsyncClientConnectionEdgeCases:
+    """Test connection edge cases."""
+
+    async def test_connect_on_already_closed_client(self, mock_server: MockSSEServer):
+        """Connecting a closed client raises error."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        await client.close()
+
+        with pytest.raises(ClientClosedError):
+            await client.connect()
+
+    async def test_close_twice_is_safe(self, mock_server: MockSSEServer):
+        """Calling close() twice doesn't raise."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        await client.connect()
+        await client.close()
+        await client.close()  # Should not raise
+
+    async def test_close_without_connect_is_safe(self, mock_server: MockSSEServer):
+        """Calling close() without connect() doesn't raise."""
+        client = AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        await client.close()  # Should not raise
+
+    async def test_is_initialized_before_connect(self, mock_server: MockSSEServer):
+        """is_initialized() returns False before connect."""
+        client = AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        assert client.is_initialized() is False
+        await client.close()
+
+    async def test_empty_init_event(self, mock_server: MockSSEServer):
+        """Client handles empty init event (no configs)."""
+        mock_server.send_init([])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.is_initialized()
+            with pytest.raises(ConfigNotFoundError):
+                client.get("any-config")
+
+    async def test_many_configs_in_init(self, mock_server: MockSSEServer):
+        """Client handles many configs in init event."""
+        configs = [create_config(f"config-{i}", i) for i in range(100)]
+        mock_server.send_init(configs)
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            for i in range(100):
+                assert client.get(f"config-{i}") == i
+
+
+class TestAsyncClientConfigValueEdgeCases:
+    """Test edge cases for config values."""
+
+    async def test_null_value(self, mock_server: MockSSEServer):
+        """Config with null value."""
+        mock_server.send_init([create_config("nullable", None)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("nullable") is None
+
+    async def test_empty_string_value(self, mock_server: MockSSEServer):
+        """Config with empty string value."""
+        mock_server.send_init([create_config("empty", "")])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("empty") == ""
+
+    async def test_zero_value(self, mock_server: MockSSEServer):
+        """Config with zero value (falsy but valid)."""
+        mock_server.send_init([create_config("zero", 0)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("zero") == 0
+
+    async def test_false_value(self, mock_server: MockSSEServer):
+        """Config with false value (falsy but valid)."""
+        mock_server.send_init([create_config("disabled", False)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("disabled") is False
+
+    async def test_unicode_value(self, mock_server: MockSSEServer):
+        """Config with unicode characters."""
+        mock_server.send_init([
+            create_config("greeting", "Hello, 世界! 🌍"),
+            create_config("emoji", "🚀🎉✨"),
+        ])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("greeting") == "Hello, 世界! 🌍"
+            assert client.get("emoji") == "🚀🎉✨"
+
+    async def test_large_string_value(self, mock_server: MockSSEServer):
+        """Config with large string value."""
+        large_value = "x" * 10000
+        mock_server.send_init([create_config("large", large_value)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("large") == large_value
+
+    async def test_nested_object_value(self, mock_server: MockSSEServer):
+        """Config with deeply nested object."""
+        nested = {
+            "level1": {
+                "level2": {
+                    "level3": {"value": "deep"}
+                }
+            }
+        }
+        mock_server.send_init([create_config("nested", nested)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            result = client.get("nested")
+            assert result["level1"]["level2"]["level3"]["value"] == "deep"
+
+
+class TestAsyncClientOverrideEdgeCases:
+    """Test edge cases for override evaluation."""
+
+    async def test_multiple_overrides_first_match_wins(self, mock_server: MockSSEServer):
+        """First matching override wins."""
+        mock_server.send_init([
+            create_config(
+                "value",
+                "default",
+                overrides=[
+                    create_override("first", "first-value", [
+                        create_condition("equals", "tier", "premium"),
+                    ]),
+                    create_override("second", "second-value", [
+                        create_condition("equals", "tier", "premium"),
+                    ]),
+                ],
+            ),
+        ])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("value", context={"tier": "premium"}) == "first-value"
+
+    async def test_override_with_in_operator(self, mock_server: MockSSEServer):
+        """Override using 'in' operator."""
+        mock_server.send_init([
+            create_config(
+                "feature",
+                False,
+                overrides=[
+                    create_override("vip-users", True, [
+                        {"operator": "in", "property": "plan", "value": ["pro", "enterprise"]},
+                    ]),
+                ],
+            ),
+        ])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("feature", context={"plan": "free"}) is False
+            assert client.get("feature", context={"plan": "pro"}) is True
+
+    async def test_override_with_numeric_comparison(self, mock_server: MockSSEServer):
+        """Override using numeric comparison operators."""
+        mock_server.send_init([
+            create_config(
+                "discount",
+                0,
+                overrides=[
+                    create_override("high-spenders", 20, [
+                        {"operator": "greater_than", "property": "total_spent", "value": 1000},
+                    ]),
+                ],
+            ),
+        ])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("discount", context={"total_spent": 100}) == 0
+            assert client.get("discount", context={"total_spent": 1001}) == 20
+
+    async def test_override_with_multiple_conditions_and(self, mock_server: MockSSEServer):
+        """Override with multiple conditions (AND logic)."""
+        mock_server.send_init([
+            create_config(
+                "special-feature",
+                False,
+                overrides=[
+                    create_override("premium-beta", True, [
+                        create_condition("equals", "plan", "premium"),
+                        create_condition("equals", "beta", True),
+                    ]),
+                ],
+            ),
+        ])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("special-feature", context={"plan": "premium"}) is False
+            assert client.get("special-feature", context={"plan": "premium", "beta": True}) is True
+
+
+class TestAsyncClientSubscriptionEdgeCases:
+    """Test edge cases for subscriptions."""
+
+    async def test_subscriber_exception_doesnt_break_other_subscribers(self, mock_server: MockSSEServer):
+        """Exception in one subscriber doesn't prevent others from being called."""
+        mock_server.send_init([create_config("feature", False)])
+
+        successful_changes: list[bool] = []
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            def bad_subscriber(name, config):
+                raise ValueError("Intentional error")
+
+            def good_subscriber(name, config):
+                successful_changes.append(config.value)
+
+            client.subscribe(bad_subscriber)
+            client.subscribe(good_subscriber)
+
+            mock_server.send_config_change(create_config("feature", True))
+            await asyncio.sleep(0.3)
+
+            assert len(successful_changes) == 1
+            assert successful_changes[0] is True
+
+    async def test_async_subscriber_exception_doesnt_break_others(self, mock_server: MockSSEServer):
+        """Exception in async subscriber doesn't prevent others from being called."""
+        mock_server.send_init([create_config("feature", False)])
+
+        successful_changes: list[bool] = []
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            async def bad_async_subscriber(name, config):
+                raise ValueError("Intentional async error")
+
+            async def good_async_subscriber(name, config):
+                successful_changes.append(config.value)
+
+            client.subscribe(bad_async_subscriber)
+            client.subscribe(good_async_subscriber)
+
+            mock_server.send_config_change(create_config("feature", True))
+            await asyncio.sleep(0.3)
+
+            assert len(successful_changes) == 1
+
+    async def test_multiple_subscribers_same_config(self, mock_server: MockSSEServer):
+        """Multiple subscribers for the same config all receive updates."""
+        mock_server.send_init([create_config("feature", False)])
+
+        changes1: list[bool] = []
+        changes2: list[bool] = []
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            client.subscribe_config("feature", lambda c: changes1.append(c.value))
+            client.subscribe_config("feature", lambda c: changes2.append(c.value))
+
+            mock_server.send_config_change(create_config("feature", True))
+            await asyncio.sleep(0.3)
+
+            assert changes1 == [True]
+            assert changes2 == [True]
+
+    async def test_config_change_updates_local_cache(self, mock_server: MockSSEServer):
+        """Config changes update the local cache immediately."""
+        mock_server.send_init([create_config("counter", 0)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("counter") == 0
+
+            mock_server.send_config_change(create_config("counter", 1))
+            await asyncio.sleep(0.3)
+            assert client.get("counter") == 1
+
+
+class TestAsyncClientErrorHandling:
+    """Test error handling scenarios."""
+
+    async def test_server_returns_400(self, mock_server: MockSSEServer):
+        """Client handles 400 Bad Request."""
+        mock_server.set_status_code(400)
+
+        client = AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+            initialization_timeout_ms=1000,
+            retry_delay_ms=100,
+        )
+
+        with pytest.raises(TimeoutError):
+            await client.connect()
+
+        await client.close()
+
+    async def test_server_returns_503(self, mock_server: MockSSEServer):
+        """Client handles 503 Service Unavailable and retries."""
+        mock_server.set_status_code(503)
+
+        def send_init_later():
+            time.sleep(0.3)
+            mock_server.send_init([create_config("feature", True)])
+
+        threading.Thread(target=send_init_later, daemon=True).start()
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+            initialization_timeout_ms=3000,
+            retry_delay_ms=100,
+        ) as client:
+            assert client.get("feature") is True
+
+    async def test_new_config_added_via_change_event(self, mock_server: MockSSEServer):
+        """New configs can be added via config_change events."""
+        mock_server.send_init([create_config("existing", True)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            assert client.get("existing") is True
+
+            with pytest.raises(ConfigNotFoundError):
+                client.get("new-config")
+
+            mock_server.send_config_change(create_config("new-config", "new-value"))
+            await asyncio.sleep(0.3)
+
+            assert client.get("new-config") == "new-value"
+
+
+class TestAsyncClientDebugMode:
+    """Test debug mode functionality."""
+
+    async def test_debug_mode_enabled(self, mock_server: MockSSEServer):
+        """Debug mode can be enabled without errors."""
+        mock_server.send_init([create_config("feature", True)])
+
+        async with AsyncReplaneClient(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+            debug=True,
+        ) as client:
+            assert client.get("feature") is True

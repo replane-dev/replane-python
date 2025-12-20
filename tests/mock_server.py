@@ -11,7 +11,7 @@ import queue
 import socketserver
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from typing import Any
 
 
@@ -97,7 +97,7 @@ class MockSSEHandler(BaseHTTPRequestHandler):
             server.active_connections -= 1
 
 
-class MockSSEServer(HTTPServer):
+class MockSSEServer(ThreadingHTTPServer):
     """Controllable HTTP server for testing SSE clients.
 
     Example:
@@ -108,6 +108,9 @@ class MockSSEServer(HTTPServer):
         >>> # ... run client tests ...
         >>> server.stop()
     """
+
+    # Use daemon threads so they don't block shutdown
+    daemon_threads = True
 
     def __init__(self, port: int = 0):
         """Initialize the mock server.
@@ -157,6 +160,7 @@ class MockSSEServer(HTTPServer):
     def stop(self) -> None:
         """Stop the server and wait for it to finish."""
         self.should_stop = True
+        self.should_disconnect = True  # Force active handlers to exit
         self.shutdown()
         if self._thread:
             self._thread.join(timeout=2.0)
