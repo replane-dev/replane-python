@@ -20,7 +20,7 @@ from replane import SyncReplaneClient
 # Using context manager (recommended)
 with SyncReplaneClient(
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 ) as replane:
     # Get a simple config value
     rate_limit = replane.get("rate-limit")
@@ -48,7 +48,7 @@ from replane import AsyncReplaneClient
 async def main():
     async with AsyncReplaneClient(
         base_url="https://replane.example.com",
-        sdk_key="sk_live_...",
+        sdk_key="rp_...",
     ) as replane:
         # get() is sync - it reads from local cache
         rate_limit = replane.get("rate-limit")
@@ -149,7 +149,7 @@ from replane import (
 try:
     with SyncReplaneClient(
         base_url="https://replane.example.com",
-        sdk_key="sk_live_...",
+        sdk_key="rp_...",
     ) as replane:
         value = replane.get("my-config")
 except ConfigNotFoundError as e:

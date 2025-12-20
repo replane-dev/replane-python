@@ -12,7 +12,7 @@ from replane import SyncReplaneClient
 replane = SyncReplaneClient(
     # Required
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 
     # Optional
     context={"environment": "production"},
@@ -46,8 +46,8 @@ base_url="http://localhost:3000"  # Local development
 Your SDK key from the Replane dashboard. SDK keys are scoped to a specific project and environment.
 
 ```python
-sdk_key="sk_live_abc123..."  # Production
-sdk_key="sk_test_xyz789..."  # Testing/staging
+sdk_key="rp_abc123..."  # Production
+sdk_key="rp_test_xyz789..."  # Testing/staging
 ```
 
 ### Optional Options

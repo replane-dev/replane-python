@@ -18,7 +18,7 @@ from replane import SyncReplaneClient
 
 with SyncReplaneClient(
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 ) as replane:
     # Get a config value
     rate_limit = replane.get("rate-limit")

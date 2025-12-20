@@ -49,7 +49,7 @@ from replane import (
 try:
     with SyncReplaneClient(
         base_url="https://replane.example.com",
-        sdk_key="sk_live_...",
+        sdk_key="rp_...",
     ) as replane:
         value = replane.get("my-config")
 except ConfigNotFoundError as e:
