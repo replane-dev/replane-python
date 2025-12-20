@@ -171,6 +171,8 @@ class AsyncReplaneClient:
 
         logger.debug("connect() called, wait=%s", wait)
 
+        # Use request_timeout for the handshake (server should respond quickly).
+        # read=None means no read timeout (for SSE streaming).
         self._http_client = httpx.AsyncClient(
             timeout=httpx.Timeout(self._request_timeout, read=None),
         )
@@ -340,7 +342,11 @@ class AsyncReplaneClient:
         await self.close()
 
     async def _run_stream(self) -> None:
-        """Background task that maintains the SSE connection."""
+        """Background task that maintains the SSE connection.
+
+        During initialization: retries until init succeeds or wait_for_init times out.
+        After initialization: retries indefinitely until close() is called.
+        """
         retry_count = 0
         max_retries = 10
 
@@ -350,21 +356,20 @@ class AsyncReplaneClient:
                 retry_count = 0
             except asyncio.CancelledError:
                 break
-            except ReplaneError as e:
+            except AuthenticationError as e:
+                # Auth errors are permanent - don't retry
                 if not self._initialized.is_set():
                     self._init_error = e
                     self._initialized.set()
-                    return
+                return
 
+            except ReplaneError as e:
+                # During init: log and retry (wait_for_init will timeout if needed)
+                # After init: log and retry indefinitely
                 logger.warning("SSE connection error: %s", e)
 
             except Exception as e:
                 error = NetworkError(str(e), cause=e)
-                if not self._initialized.is_set():
-                    self._init_error = error
-                    self._initialized.set()
-                    return
-
                 logger.warning("SSE connection error: %s", error)
 
             if self._closed:

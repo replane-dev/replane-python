@@ -314,7 +314,11 @@ class SyncReplaneClient:
         self.close()
 
     def _run_stream(self) -> None:
-        """Background thread that maintains the SSE connection."""
+        """Background thread that maintains the SSE connection.
+
+        During initialization: retries until init succeeds or wait_for_init times out.
+        After initialization: retries indefinitely until close() is called.
+        """
         retry_count = 0
         max_retries = 10
 
@@ -322,21 +326,20 @@ class SyncReplaneClient:
             try:
                 self._connect_stream()
                 retry_count = 0  # Reset on successful connection
-            except ReplaneError as e:
+            except AuthenticationError as e:
+                # Auth errors are permanent - don't retry
                 if not self._initialized.is_set():
                     self._init_error = e
                     self._initialized.set()
-                    return
+                return
 
+            except ReplaneError as e:
+                # During init: log and retry (wait_for_init will timeout if needed)
+                # After init: log and retry indefinitely
                 logger.warning("SSE connection error: %s", e)
 
             except Exception as e:
                 error = NetworkError(str(e), cause=e)
-                if not self._initialized.is_set():
-                    self._init_error = error
-                    self._initialized.set()
-                    return
-
                 logger.warning("SSE connection error: %s", error)
 
             if self._stop_event.is_set():
@@ -366,24 +369,23 @@ class SyncReplaneClient:
             is_https,
         )
 
-        # Create connection
-        # Note: SSE connections are long-lived, so we use the inactivity timeout
-        # rather than the short request timeout. The inactivity timeout is used
-        # for detecting dead connections during streaming.
+        # Use request_timeout for the initial handshake (server should respond
+        # with headers within this time). After headers are received, we set
+        # the socket timeout to inactivity_timeout for streaming.
         conn: http.client.HTTPConnection
         if is_https:
             context = ssl.create_default_context()
             conn = http.client.HTTPSConnection(
                 host,
                 port,
-                timeout=self._inactivity_timeout,
+                timeout=self._request_timeout,
                 context=context,
             )
         else:
             conn = http.client.HTTPConnection(
                 host,
                 port,
-                timeout=self._inactivity_timeout,
+                timeout=self._request_timeout,
             )
 
         try:
