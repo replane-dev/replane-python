@@ -34,6 +34,21 @@ T = TypeVar("T")
 logger = logging.getLogger("replane")
 
 
+def _setup_debug_logging() -> None:
+    """Configure the replane logger for debug output."""
+    logger.setLevel(logging.DEBUG)
+    # Only add handler if none exist to avoid duplicates
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+
 class AsyncReplaneClient:
     """Asynchronous Replane client with background SSE streaming.
 
@@ -68,6 +83,7 @@ class AsyncReplaneClient:
         initialization_timeout_ms: int = 5000,
         retry_delay_ms: int = 200,
         inactivity_timeout_ms: int = 30000,
+        debug: bool = False,
     ) -> None:
         """Initialize the async Replane client.
 
@@ -81,12 +97,34 @@ class AsyncReplaneClient:
             initialization_timeout_ms: Timeout for initial connection.
             retry_delay_ms: Initial delay between retries.
             inactivity_timeout_ms: Max time without SSE events before reconnect.
+            debug: Enable debug logging to see all client activity.
 
         Raises:
             MissingDependencyError: If httpx is not installed.
         """
         if httpx is None:
             raise MissingDependencyError("httpx", "async client")
+
+        # Configure debug logging
+        self._debug = debug
+        if debug:
+            _setup_debug_logging()
+            logger.debug(
+                "Initializing AsyncReplaneClient: base_url=%s, "
+                "request_timeout_ms=%d, initialization_timeout_ms=%d, "
+                "retry_delay_ms=%d, inactivity_timeout_ms=%d",
+                base_url,
+                request_timeout_ms,
+                initialization_timeout_ms,
+                retry_delay_ms,
+                inactivity_timeout_ms,
+            )
+            if context:
+                logger.debug("Default context: %s", context)
+            if fallbacks:
+                logger.debug("Fallback configs: %s", list(fallbacks.keys()))
+            if required:
+                logger.debug("Required configs: %s", required)
 
         self._base_url = base_url.rstrip("/")
         self._sdk_key = sdk_key
@@ -131,6 +169,8 @@ class AsyncReplaneClient:
         if self._closed:
             raise ClientClosedError()
 
+        logger.debug("connect() called, wait=%s", wait)
+
         self._http_client = httpx.AsyncClient(
             timeout=httpx.Timeout(self._request_timeout, read=None),
         )
@@ -139,6 +179,7 @@ class AsyncReplaneClient:
             self._run_stream(),
             name="replane-sse",
         )
+        logger.debug("SSE background task started")
 
         if wait:
             await self.wait_for_init()
@@ -195,14 +236,25 @@ class AsyncReplaneClient:
             raise ClientClosedError()
 
         merged_context = {**self._context, **(context or {})}
+        logger.debug("get(%r) with context: %s", name, merged_context or "(none)")
 
         if name not in self._configs:
             if default is not None:
+                logger.debug("Config %r not found, returning default: %r", name, default)
                 return default
+            logger.debug("Config %r not found, no default provided", name)
             raise ConfigNotFoundError(name)
 
         config = self._configs[name]
-        return evaluate_config(config, merged_context)
+        result = evaluate_config(config, merged_context)
+        logger.debug(
+            "Config %r: base_value=%r, overrides=%d, result=%r",
+            name,
+            config.value,
+            len(config.overrides),
+            result,
+        )
+        return result
 
     def subscribe(
         self,
@@ -255,17 +307,22 @@ class AsyncReplaneClient:
 
     async def close(self) -> None:
         """Close the client and stop the SSE connection."""
+        logger.debug("close() called")
         self._closed = True
 
         if self._stream_task:
+            logger.debug("Cancelling SSE task...")
             self._stream_task.cancel()
             try:
                 await self._stream_task
             except asyncio.CancelledError:
                 pass
+            logger.debug("SSE task cancelled")
 
         if self._http_client:
+            logger.debug("Closing HTTP client...")
             await self._http_client.aclose()
+            logger.debug("HTTP client closed")
 
     async def __aenter__(self) -> AsyncReplaneClient:
         await self.connect()
@@ -331,21 +388,27 @@ class AsyncReplaneClient:
             "Cache-Control": "no-cache",
         }
 
+        logger.debug("Connecting to SSE: %s", url)
+
         async with self._http_client.stream(
             "POST",
             url,
             json={},
             headers=headers,
         ) as response:
+            logger.debug("Response status: %d", response.status_code)
             if response.status_code == 401:
+                logger.debug("Authentication failed (401)")
                 raise AuthenticationError()
             elif response.status_code != 200:
                 body = await response.aread()
+                logger.debug("Error response body: %s", body[:500])
                 raise from_http_status(
                     response.status_code,
                     body.decode("utf-8", errors="replace"),
                 )
 
+            logger.debug("SSE connection established, processing stream...")
             await self._process_stream(response)
 
     async def _process_stream(self, response: httpx.Response) -> None:
@@ -361,29 +424,44 @@ class AsyncReplaneClient:
 
     async def _handle_event(self, event: Any) -> None:
         """Handle a parsed SSE event."""
+        logger.debug("SSE event received: type=%s", event.event)
         if event.event == "init":
             await self._handle_init(event.data)
         elif event.event == "config_change":
             await self._handle_config_change(event.data)
+        else:
+            logger.debug("Unknown event type: %s, data=%s", event.event, event.data)
 
     async def _handle_init(self, data: dict[str, Any]) -> None:
         """Handle the init event with all configs."""
         configs_data = data.get("configs", [])
+        logger.debug("Processing init event with %d configs", len(configs_data))
 
         async with self._lock:
             for config_data in configs_data:
                 config = parse_config(config_data)
                 self._configs[config.name] = config
+                logger.debug(
+                    "Loaded config: %s (value=%r, overrides=%d)",
+                    config.name,
+                    config.value,
+                    len(config.overrides),
+                )
 
             # Check required configs
             missing = self._required - set(self._configs.keys())
             if missing:
+                logger.debug("Missing required configs: %s", sorted(missing))
                 self._init_error = ConfigNotFoundError(
                     f"Missing required configs: {', '.join(sorted(missing))}"
                 )
 
         self._initialized.set()
-        logger.debug("Initialized with %d configs", len(configs_data))
+        logger.debug(
+            "Initialization complete: %d configs loaded, config names: %s",
+            len(self._configs),
+            list(self._configs.keys()),
+        )
 
     async def _handle_config_change(self, data: dict[str, Any]) -> None:
         """Handle a config change event."""

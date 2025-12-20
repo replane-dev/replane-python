@@ -22,6 +22,7 @@ client = SyncReplaneClient(
     initialization_timeout_ms=5000,
     retry_delay_ms=200,
     inactivity_timeout_ms=30000,
+    debug=False,
 )
 ```
 
@@ -164,6 +165,39 @@ client = SyncReplaneClient(
     ...,
     inactivity_timeout_ms=60000,  # 60 seconds
 )
+```
+
+#### `debug`
+- **Type:** `bool`
+- **Default:** `False`
+
+Enable debug logging to see detailed information about all client activity. This is useful for troubleshooting connection issues, understanding when configs are loaded, and diagnosing override evaluation.
+
+```python
+client = SyncReplaneClient(
+    ...,
+    debug=True,  # Enable debug logging
+)
+```
+
+When enabled, you'll see logs for:
+- Client initialization parameters
+- SSE connection attempts and status
+- Each config loaded from the server
+- Config retrieval with context and evaluated value
+- SSE events received
+- Reconnection attempts
+- Client close operations
+
+Example output:
+```
+2024-01-15 10:30:00 [DEBUG] replane: Initializing SyncReplaneClient: base_url=https://replane.example.com, ...
+2024-01-15 10:30:00 [DEBUG] replane: connect() called, wait=True
+2024-01-15 10:30:00 [DEBUG] replane: Connecting to SSE: host=replane.example.com, port=443, https=True
+2024-01-15 10:30:00 [DEBUG] replane: Response status: 200 OK
+2024-01-15 10:30:00 [DEBUG] replane: SSE event received: type=init
+2024-01-15 10:30:00 [DEBUG] replane: Loaded config: rate-limit (value=100, overrides=2)
+2024-01-15 10:30:00 [DEBUG] replane: Initialization complete: 5 configs loaded
 ```
 
 ## Manual Lifecycle Management

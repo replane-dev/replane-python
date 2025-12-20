@@ -34,6 +34,21 @@ T = TypeVar("T")
 logger = logging.getLogger("replane")
 
 
+def _setup_debug_logging() -> None:
+    """Configure the replane logger for debug output."""
+    logger.setLevel(logging.DEBUG)
+    # Only add handler if none exist to avoid duplicates
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+
 class SyncReplaneClient:
     """Synchronous Replane client with background SSE streaming.
 
@@ -67,6 +82,7 @@ class SyncReplaneClient:
         initialization_timeout_ms: int = 5000,
         retry_delay_ms: int = 200,
         inactivity_timeout_ms: int = 30000,
+        debug: bool = False,
     ) -> None:
         """Initialize the Replane client.
 
@@ -80,7 +96,28 @@ class SyncReplaneClient:
             initialization_timeout_ms: Timeout for initial connection.
             retry_delay_ms: Initial delay between retries.
             inactivity_timeout_ms: Max time without SSE events before reconnect.
+            debug: Enable debug logging to see all client activity.
         """
+        # Configure debug logging
+        self._debug = debug
+        if debug:
+            _setup_debug_logging()
+            logger.debug(
+                "Initializing SyncReplaneClient: base_url=%s, "
+                "request_timeout_ms=%d, initialization_timeout_ms=%d, "
+                "retry_delay_ms=%d, inactivity_timeout_ms=%d",
+                base_url,
+                request_timeout_ms,
+                initialization_timeout_ms,
+                retry_delay_ms,
+                inactivity_timeout_ms,
+            )
+            if context:
+                logger.debug("Default context: %s", context)
+            if fallbacks:
+                logger.debug("Fallback configs: %s", list(fallbacks.keys()))
+            if required:
+                logger.debug("Required configs: %s", required)
         self._base_url = base_url.rstrip("/")
         self._sdk_key = sdk_key
         self._context = context or {}
@@ -124,12 +161,15 @@ class SyncReplaneClient:
         if self._closed:
             raise ClientClosedError()
 
+        logger.debug("connect() called, wait=%s", wait)
+
         self._stream_thread = threading.Thread(
             target=self._run_stream,
             daemon=True,
             name="replane-sse",
         )
         self._stream_thread.start()
+        logger.debug("SSE background thread started")
 
         if wait:
             self.wait_for_init()
@@ -178,15 +218,26 @@ class SyncReplaneClient:
             raise ClientClosedError()
 
         merged_context = {**self._context, **(context or {})}
+        logger.debug("get(%r) with context: %s", name, merged_context or "(none)")
 
         with self._lock:
             if name not in self._configs:
                 if default is not None:
+                    logger.debug("Config %r not found, returning default: %r", name, default)
                     return default
+                logger.debug("Config %r not found, no default provided", name)
                 raise ConfigNotFoundError(name)
 
             config = self._configs[name]
-            return evaluate_config(config, merged_context)
+            result = evaluate_config(config, merged_context)
+            logger.debug(
+                "Config %r: base_value=%r, overrides=%d, result=%r",
+                name,
+                config.value,
+                len(config.overrides),
+                result,
+            )
+            return result
 
     def subscribe(
         self,
@@ -239,10 +290,13 @@ class SyncReplaneClient:
 
     def close(self) -> None:
         """Close the client and stop the SSE connection."""
+        logger.debug("close() called")
         self._closed = True
         self._stop_event.set()
         if self._stream_thread and self._stream_thread.is_alive():
+            logger.debug("Waiting for SSE thread to stop...")
             self._stream_thread.join(timeout=2.0)
+            logger.debug("SSE thread stopped")
 
     def __enter__(self) -> SyncReplaneClient:
         self.connect()
@@ -297,6 +351,13 @@ class SyncReplaneClient:
         host = parsed.hostname or "localhost"
         port = parsed.port or (443 if is_https else 80)
 
+        logger.debug(
+            "Connecting to SSE: host=%s, port=%d, https=%s",
+            host,
+            port,
+            is_https,
+        )
+
         # Create connection
         conn: http.client.HTTPConnection
         if is_https:
@@ -325,19 +386,25 @@ class SyncReplaneClient:
                 "Cache-Control": "no-cache",
             }
 
+            logger.debug("Sending POST request to %s", path)
             conn.request("POST", path, body=body, headers=headers)
             response = conn.getresponse()
+            logger.debug("Response status: %d %s", response.status, response.reason)
 
             if response.status == 401:
+                logger.debug("Authentication failed (401)")
                 raise AuthenticationError()
             elif response.status != 200:
                 error_body = response.read().decode("utf-8", errors="replace")
+                logger.debug("Error response body: %s", error_body[:500])
                 raise from_http_status(response.status, error_body)
 
+            logger.debug("SSE connection established, processing stream...")
             # Process SSE stream
             self._process_stream(response)
 
         finally:
+            logger.debug("Closing HTTP connection")
             conn.close()
 
     def _process_stream(self, response: http.client.HTTPResponse) -> None:
@@ -379,29 +446,44 @@ class SyncReplaneClient:
 
     def _handle_event(self, event: Any) -> None:
         """Handle a parsed SSE event."""
+        logger.debug("SSE event received: type=%s", event.event)
         if event.event == "init":
             self._handle_init(event.data)
         elif event.event == "config_change":
             self._handle_config_change(event.data)
+        else:
+            logger.debug("Unknown event type: %s, data=%s", event.event, event.data)
 
     def _handle_init(self, data: dict[str, Any]) -> None:
         """Handle the init event with all configs."""
         configs_data = data.get("configs", [])
+        logger.debug("Processing init event with %d configs", len(configs_data))
 
         with self._lock:
             for config_data in configs_data:
                 config = parse_config(config_data)
                 self._configs[config.name] = config
+                logger.debug(
+                    "Loaded config: %s (value=%r, overrides=%d)",
+                    config.name,
+                    config.value,
+                    len(config.overrides),
+                )
 
             # Check required configs
             missing = self._required - set(self._configs.keys())
             if missing:
+                logger.debug("Missing required configs: %s", sorted(missing))
                 self._init_error = ConfigNotFoundError(
                     f"Missing required configs: {', '.join(sorted(missing))}"
                 )
 
         self._initialized.set()
-        logger.debug("Initialized with %d configs", len(configs_data))
+        logger.debug(
+            "Initialization complete: %d configs loaded, config names: %s",
+            len(self._configs),
+            list(self._configs.keys()),
+        )
 
     def _handle_config_change(self, data: dict[str, Any]) -> None:
         """Handle a config change event."""
