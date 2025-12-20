@@ -3,24 +3,27 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-# See https://setuptools.pypa.io/en/latest/userguide/quickstart.html for more project configuration options.
 name = "replane"
+description = "Python SDK for Replane - dynamic configuration platform with real-time updates"
 dynamic = ["version"]
 readme = "README.md"
 classifiers = [
-    "Intended Audience :: Science/Research",
-    "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 authors = [
     {name = "Dmitry Tilyupo", email = "tilyupo@gmail.com"}
 ]
-requires-python = ">=3.8"
-dependencies = [
-  # Add your own dependencies here
-]
+requires-python = ">=3.10"
+dependencies = []
 license = {file = "LICENSE"}
 
 [project.urls]
@@ -30,25 +33,20 @@ Changelog = "https://github.com/replane-dev/replane-python/blob/main/CHANGELOG.m
 # Documentation = "https://replane.readthedocs.io/"
 
 [project.optional-dependencies]
+async = [
+    "httpx>=0.25.0",
+]
 dev = [
+    "httpx>=0.25.0",
     "ruff",
     "mypy>=1.0,<2.0",
-    "black>=23.0,<25.0",
-    "isort>=5.12,<5.14",
     "pytest",
-    "pytest-sphinx",
+    "pytest-asyncio",
     "pytest-cov",
     "twine>=1.11.0",
     "build",
     "setuptools",
     "wheel",
-    "Sphinx>=6.0,<9.0",
-    "furo==2024.8.6",
-    "myst-parser>=1.0",
-    "sphinx-copybutton",
-    "sphinx-autobuild",
-    "sphinx-autodoc-typehints==1.23.3",
-    "packaging"
 ]
 
 [tool.setuptools.packages.find]
@@ -95,10 +93,10 @@ multi_line_output = 3
 reportPrivateImportUsage = false
 
 [tool.ruff]
-line-length = 115
-target-version = "py39"
+line-length = 100
+target-version = "py310"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
 [tool.mypy]
@@ -116,5 +114,7 @@ python_classes = [
   "Test*",
   "*Test"
 ]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 log_format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 log_level = "DEBUG"
