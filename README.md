@@ -2,6 +2,10 @@
 
 Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform with real-time updates.
 
+[![Documentation](https://img.shields.io/badge/docs-readthedocs-blue)](https://replane.readthedocs.io/en/latest/)
+
+**[Full Documentation](https://replane.readthedocs.io/en/latest/)**
+
 ## Features
 
 - **Real-time updates** via Server-Sent Events (SSE)
