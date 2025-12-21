@@ -326,6 +326,10 @@ def get_items():
 - No dependencies for sync client
 - `httpx` for async client (`pip install replane[async]`)
 
+## Community
+
+Have questions or want to discuss Replane? Join the conversation in [GitHub Discussions](https://github.com/orgs/replane-dev/discussions).
+
 ## License
 
 MIT

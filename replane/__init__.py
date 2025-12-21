@@ -58,18 +58,9 @@ from .types import (
 from .version import VERSION, VERSION_SHORT
 
 
-# Backward compatibility aliases
-SyncReplaneClient = Replane
-
-
 # Async client (lazy import to avoid httpx dependency)
 def __getattr__(name: str):
     if name == "AsyncReplane":
-        from ._async import AsyncReplane
-
-        return AsyncReplane
-    # Backward compatibility alias
-    if name == "AsyncReplaneClient":
         from ._async import AsyncReplane
 
         return AsyncReplane
@@ -83,9 +74,6 @@ __all__ = [
     # Clients
     "Replane",
     "AsyncReplane",
-    # Backward compatibility aliases
-    "SyncReplaneClient",
-    "AsyncReplaneClient",
     # Types
     "Config",
     "Context",
