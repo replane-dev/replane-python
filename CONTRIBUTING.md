@@ -76,7 +76,7 @@ isort .
 
 ## Reporting Issues
 
-Found a bug or have a feature request? Please open an issue on GitHub.
+Found a bug or have a feature request? Please [open an issue](https://github.com/replane-dev/replane-python/issues) on GitHub.
 
 ## Community
 
