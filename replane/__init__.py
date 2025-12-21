@@ -8,7 +8,7 @@ Quick start (sync):
     >>>
     >>> with Replane(
     ...     base_url="https://replane.example.com",
-    ...     sdk_key="sk_...",
+    ...     sdk_key="rp_...",
     ... ) as client:
     ...     if client.get("new-feature-enabled"):
     ...         enable_new_feature()
@@ -18,7 +18,7 @@ Quick start (async):
     >>>
     >>> async with AsyncReplane(
     ...     base_url="https://replane.example.com",
-    ...     sdk_key="sk_...",
+    ...     sdk_key="rp_...",
     ... ) as client:
     ...     rate_limit = client.get("rate-limit", context={"plan": user.plan})
 

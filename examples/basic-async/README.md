@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ```python
 BASE_URL = "https://your-replane-server.com"
-SDK_KEY = "sk_your_sdk_key_here"
+SDK_KEY = "your_sdk_key_here"
 ```
 
 ## Run

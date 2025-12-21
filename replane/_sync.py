@@ -62,7 +62,7 @@ class Replane:
     Example:
         >>> client = Replane(
         ...     base_url="https://replane.example.com",
-        ...     sdk_key="sk_...",
+        ...     sdk_key="rp_...",
         ... )
         >>> client.connect()
         >>> value = client.get("feature-flag")

@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ```bash
 export REPLANE_BASE_URL="https://your-replane-server.com"
-export REPLANE_SDK_KEY="sk_your_sdk_key_here"
+export REPLANE_SDK_KEY="your_sdk_key_here"
 ```
 
 Or update the defaults in `app.py`.
@@ -43,6 +43,7 @@ The server will start on `http://localhost:5000`.
 ## API Endpoints
 
 ### `GET /`
+
 Homepage that shows different content based on the `new-dashboard-enabled` feature flag.
 
 ```bash
@@ -50,6 +51,7 @@ curl http://localhost:5000/
 ```
 
 ### `GET /api/items`
+
 List items with rate limiting info based on user's plan.
 
 ```bash
@@ -61,6 +63,7 @@ curl -H "X-User-Plan: premium" http://localhost:5000/api/items
 ```
 
 ### `POST /api/upload`
+
 Upload endpoint with configurable max file size based on user's plan.
 
 ```bash
@@ -68,6 +71,7 @@ curl -X POST http://localhost:5000/api/upload
 ```
 
 ### `GET /api/config`
+
 Debug endpoint showing current configuration values.
 
 ```bash

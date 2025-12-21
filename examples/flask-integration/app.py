@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # Configuration from environment variables
 BASE_URL = os.environ.get("REPLANE_BASE_URL", "https://your-replane-server.com")
-SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "sk_your_sdk_key_here")
+SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "your_sdk_key_here")
 
 # Initialize the Replane client at application startup
 replane_client = Replane(

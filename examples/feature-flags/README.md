@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ```python
 BASE_URL = "https://your-replane-server.com"
-SDK_KEY = "sk_your_sdk_key_here"
+SDK_KEY = "your_sdk_key_here"
 ```
 
 ## Run
@@ -150,17 +150,23 @@ For these examples to work fully, configure the following in your Replane dashbo
   "overrides": [
     {
       "name": "starter-plan",
-      "conditions": [{"operator": "equals", "property": "plan", "expected": "starter"}],
+      "conditions": [
+        { "operator": "equals", "property": "plan", "expected": "starter" }
+      ],
       "value": 500
     },
     {
       "name": "pro-plan",
-      "conditions": [{"operator": "equals", "property": "plan", "expected": "pro"}],
+      "conditions": [
+        { "operator": "equals", "property": "plan", "expected": "pro" }
+      ],
       "value": 2000
     },
     {
       "name": "enterprise-plan",
-      "conditions": [{"operator": "equals", "property": "plan", "expected": "enterprise"}],
+      "conditions": [
+        { "operator": "equals", "property": "plan", "expected": "enterprise" }
+      ],
       "value": 10000
     }
   ]
@@ -176,11 +182,13 @@ For these examples to work fully, configure the following in your Replane dashbo
   "overrides": [
     {
       "name": "beta-users",
-      "conditions": [{
-        "operator": "in",
-        "property": "user_id",
-        "expected": ["user-1", "user-2", "user-3"]
-      }],
+      "conditions": [
+        {
+          "operator": "in",
+          "property": "user_id",
+          "expected": ["user-1", "user-2", "user-3"]
+        }
+      ],
       "value": true
     }
   ]
@@ -196,13 +204,15 @@ For these examples to work fully, configure the following in your Replane dashbo
   "overrides": [
     {
       "name": "10-percent-rollout",
-      "conditions": [{
-        "operator": "segmentation",
-        "property": "user_id",
-        "fromPercentage": 0,
-        "toPercentage": 10,
-        "seed": "experimental-feature-rollout"
-      }],
+      "conditions": [
+        {
+          "operator": "segmentation",
+          "property": "user_id",
+          "fromPercentage": 0,
+          "toPercentage": 10,
+          "seed": "experimental-feature-rollout"
+        }
+      ],
       "value": true
     }
   ]

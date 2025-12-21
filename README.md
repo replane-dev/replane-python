@@ -36,7 +36,7 @@ from replane import Replane
 # Using context manager (recommended)
 with Replane(
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 ) as client:
     # Get a simple config value
     rate_limit = client.get("rate-limit")
@@ -60,7 +60,7 @@ from replane import AsyncReplane
 
 async with AsyncReplane(
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 ) as client:
     # get() is sync since it reads from local cache
     rate_limit = client.get("rate-limit")
@@ -76,7 +76,7 @@ Both clients accept the same configuration:
 ```python
 client = Replane(
     base_url="https://replane.example.com",
-    sdk_key="sk_live_...",
+    sdk_key="rp_...",
 
     # Default context applied to all get() calls
     context={"environment": "production"},
@@ -118,6 +118,7 @@ value = client.get("feature-flag", context=context)
 ### Override Examples
 
 **Percentage rollout** (gradual feature release):
+
 ```python
 # Server config has 10% rollout based on user_id
 # Same user always gets same result (deterministic hashing)
@@ -125,12 +126,14 @@ enabled = client.get("new-checkout", context={"user_id": user.id})
 ```
 
 **Plan-based features**:
+
 ```python
 max_items = client.get("max-items", context={"plan": user.plan})
 # Returns different values for free/pro/enterprise plans
 ```
 
 **Geographic targeting**:
+
 ```python
 content = client.get("homepage-banner", context={"country": request.country})
 ```
@@ -279,7 +282,7 @@ async def lifespan(app: FastAPI):
     global client
     client = AsyncReplane(
         base_url="https://replane.example.com",
-        sdk_key="sk_live_...",
+        sdk_key="rp_...",
     )
     await client.connect()
     yield
@@ -311,7 +314,7 @@ def init_replane():
     global replane_client
     replane_client = Replane(
         base_url="https://replane.example.com",
-        sdk_key="sk_live_...",
+        sdk_key="rp_...",
     )
     replane_client.connect()
 

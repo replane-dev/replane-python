@@ -10,7 +10,7 @@ from replane import AsyncReplane
 
 # Configuration - replace with your actual values
 BASE_URL = "https://your-replane-server.com"
-SDK_KEY = "sk_your_sdk_key_here"
+SDK_KEY = "your_sdk_key_here"
 
 
 async def main():

@@ -63,7 +63,7 @@ class AsyncReplane:
     Example:
         >>> async with AsyncReplane(
         ...     base_url="https://replane.example.com",
-        ...     sdk_key="sk_...",
+        ...     sdk_key="rp_...",
         ... ) as client:
         ...     value = client.get("feature-flag")
 
