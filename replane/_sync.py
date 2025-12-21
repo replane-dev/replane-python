@@ -52,7 +52,7 @@ def _setup_debug_logging() -> None:
         logger.addHandler(handler)
 
 
-class SyncReplaneClient:
+class Replane:
     """Synchronous Replane client with background SSE streaming.
 
     This client maintains a persistent SSE connection to receive real-time
@@ -60,7 +60,7 @@ class SyncReplaneClient:
     from the local cache.
 
     Example:
-        >>> client = SyncReplaneClient(
+        >>> client = Replane(
         ...     base_url="https://replane.example.com",
         ...     sdk_key="sk_...",
         ... )
@@ -69,7 +69,7 @@ class SyncReplaneClient:
         >>> client.close()
 
     For simpler usage, prefer the context manager:
-        >>> with SyncReplaneClient(...) as client:
+        >>> with Replane(...) as client:
         ...     value = client.get("feature-flag")
     """
 
@@ -106,7 +106,7 @@ class SyncReplaneClient:
         if debug:
             _setup_debug_logging()
             logger.debug(
-                "Initializing SyncReplaneClient: base_url=%s, "
+                "Initializing Replane: base_url=%s, "
                 "request_timeout_ms=%d, initialization_timeout_ms=%d, "
                 "retry_delay_ms=%d, inactivity_timeout_ms=%d",
                 base_url,
@@ -309,7 +309,7 @@ class SyncReplaneClient:
             self._stream_thread.join(timeout=2.0)
             logger.debug("SSE thread stopped")
 
-    def __enter__(self) -> SyncReplaneClient:
+    def __enter__(self) -> Replane:
         self.connect()
         return self
 

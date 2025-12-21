@@ -64,7 +64,7 @@ context = {
 Set a default context that applies to all `get()` calls:
 
 ```python
-replane = SyncReplaneClient(
+replane = Replane(
     ...,
     context={
         "environment": "production",

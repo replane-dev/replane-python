@@ -77,7 +77,7 @@ curl -H "X-User-ID: user-123" -H "X-User-Plan: premium" \
 
 ## What This Example Shows
 
-- Initializing `SyncReplaneClient` at application startup
+- Initializing `Replane` at application startup
 - Building evaluation context from request headers
 - Using feature flags to control UI features
 - Dynamic configuration for rate limits and upload sizes

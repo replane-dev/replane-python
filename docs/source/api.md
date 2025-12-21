@@ -4,19 +4,19 @@ This page provides detailed API documentation for the Replane Python SDK.
 
 ## Clients
 
-### SyncReplaneClient
+### Replane
 
 ```{eval-rst}
-.. autoclass:: replane.SyncReplaneClient
+.. autoclass:: replane.Replane
    :members:
    :undoc-members:
    :show-inheritance:
 ```
 
-### AsyncReplaneClient
+### AsyncReplane
 
 ```{eval-rst}
-.. autoclass:: replane.AsyncReplaneClient
+.. autoclass:: replane.AsyncReplane
    :members:
    :undoc-members:
    :show-inheritance:

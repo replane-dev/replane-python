@@ -14,9 +14,9 @@ Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform
 ## Quick Example
 
 ```python
-from replane import SyncReplaneClient
+from replane import Replane
 
-with SyncReplaneClient(
+with Replane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:

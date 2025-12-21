@@ -4,9 +4,9 @@ Replane is a configuration platform that enables applications to change
 settings in real-time without deploying code.
 
 Quick start (sync):
-    >>> from replane import SyncReplaneClient
+    >>> from replane import Replane
     >>>
-    >>> with SyncReplaneClient(
+    >>> with Replane(
     ...     base_url="https://replane.example.com",
     ...     sdk_key="sk_...",
     ... ) as client:
@@ -14,9 +14,9 @@ Quick start (sync):
     ...         enable_new_feature()
 
 Quick start (async):
-    >>> from replane import AsyncReplaneClient
+    >>> from replane import AsyncReplane
     >>>
-    >>> async with AsyncReplaneClient(
+    >>> async with AsyncReplane(
     ...     base_url="https://replane.example.com",
     ...     sdk_key="sk_...",
     ... ) as client:
@@ -31,7 +31,7 @@ For testing:
     ... })
 """
 
-from ._sync import SyncReplaneClient
+from ._sync import Replane
 from .errors import (
     AuthenticationError,
     ClientClosedError,
@@ -58,12 +58,21 @@ from .types import (
 from .version import VERSION, VERSION_SHORT
 
 
+# Backward compatibility aliases
+SyncReplaneClient = Replane
+
+
 # Async client (lazy import to avoid httpx dependency)
 def __getattr__(name: str):
-    if name == "AsyncReplaneClient":
-        from ._async import AsyncReplaneClient
+    if name == "AsyncReplane":
+        from ._async import AsyncReplane
 
-        return AsyncReplaneClient
+        return AsyncReplane
+    # Backward compatibility alias
+    if name == "AsyncReplaneClient":
+        from ._async import AsyncReplane
+
+        return AsyncReplane
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -72,6 +81,9 @@ __all__ = [
     "VERSION",
     "VERSION_SHORT",
     # Clients
+    "Replane",
+    "AsyncReplane",
+    # Backward compatibility aliases
     "SyncReplaneClient",
     "AsyncReplaneClient",
     # Types

@@ -38,7 +38,7 @@ python main.py
 
 ## What This Example Shows
 
-- Using the `AsyncReplaneClient` with async context manager
+- Using the `AsyncReplane` with async context manager
 - Reading feature flags and configs (sync read from local cache)
 - Passing context for override evaluation
 - Using default values for missing configs

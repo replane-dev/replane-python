@@ -24,7 +24,7 @@ This installs the SDK with zero dependencies. The synchronous client uses only P
 pip install replane[async]
 ```
 
-This adds [httpx](https://www.python-httpx.org/) as a dependency, enabling the `AsyncReplaneClient`.
+This adds [httpx](https://www.python-httpx.org/) as a dependency, enabling the `AsyncReplane` client.
 
 ## Installing from source
 

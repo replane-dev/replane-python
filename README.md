@@ -30,10 +30,10 @@ pip install replane[async]
 ### Synchronous Client
 
 ```python
-from replane import SyncReplaneClient
+from replane import Replane
 
 # Using context manager (recommended)
-with SyncReplaneClient(
+with Replane(
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
 ) as client:
@@ -55,9 +55,9 @@ with SyncReplaneClient(
 Requires `pip install replane[async]`:
 
 ```python
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
-async with AsyncReplaneClient(
+async with AsyncReplane(
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
 ) as client:
@@ -73,7 +73,7 @@ async with AsyncReplaneClient(
 Both clients accept the same configuration:
 
 ```python
-client = SyncReplaneClient(
+client = Replane(
     base_url="https://replane.example.com",
     sdk_key="sk_live_...",
 
@@ -246,7 +246,7 @@ If you prefer not to use context managers:
 
 ```python
 # Sync
-client = SyncReplaneClient(base_url="...", sdk_key="...")
+client = Replane(base_url="...", sdk_key="...")
 client.connect()  # Blocks until initialized
 try:
     value = client.get("config")
@@ -254,7 +254,7 @@ finally:
     client.close()
 
 # Async
-client = AsyncReplaneClient(base_url="...", sdk_key="...")
+client = AsyncReplane(base_url="...", sdk_key="...")
 await client.connect()
 try:
     value = client.get("config")
@@ -269,14 +269,14 @@ finally:
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
-client: AsyncReplaneClient | None = None
+client: AsyncReplane | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global client
-    client = AsyncReplaneClient(
+    client = AsyncReplane(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
     )
@@ -286,12 +286,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-def get_replane() -> AsyncReplaneClient:
+def get_replane() -> AsyncReplane:
     assert client is not None
     return client
 
 @app.get("/items")
-async def get_items(replane: AsyncReplaneClient = Depends(get_replane)):
+async def get_items(replane: AsyncReplane = Depends(get_replane)):
     max_items = replane.get("max-items", context={"plan": "free"})
     return {"max_items": max_items}
 ```
@@ -300,15 +300,15 @@ async def get_items(replane: AsyncReplaneClient = Depends(get_replane)):
 
 ```python
 from flask import Flask, g
-from replane import SyncReplaneClient
+from replane import Replane
 
 app = Flask(__name__)
-replane_client: SyncReplaneClient | None = None
+replane_client: Replane | None = None
 
 @app.before_first_request
 def init_replane():
     global replane_client
-    replane_client = SyncReplaneClient(
+    replane_client = Replane(
         base_url="https://replane.example.com",
         sdk_key="sk_live_...",
     )

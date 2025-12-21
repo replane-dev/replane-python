@@ -1,4 +1,4 @@
-"""Integration tests for AsyncReplaneClient."""
+"""Integration tests for AsyncReplane."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 from replane.errors import (
     AuthenticationError,
     ClientClosedError,
@@ -36,7 +36,7 @@ class TestAsyncClientConnection:
             ]
         )
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -52,7 +52,7 @@ class TestAsyncClientConnection:
         """Client works as async context manager."""
         mock_server.send_init([create_config("value", 42)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -61,7 +61,7 @@ class TestAsyncClientConnection:
     async def test_initialization_timeout(self, mock_server: MockSSEServer):
         """Client raises TimeoutError when init takes too long."""
         # Don't send any events - let it timeout
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=500,
@@ -77,7 +77,7 @@ class TestAsyncClientConnection:
         """Client raises AuthenticationError on 401 response."""
         mock_server.set_auth_required("correct_key")
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="wrong_key",
             initialization_timeout_ms=2000,
@@ -93,7 +93,7 @@ class TestAsyncClientConnection:
         mock_server.set_auth_required("rp_correct_key")
         mock_server.send_init([create_config("feature", True)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_correct_key",
         ) as client:
@@ -103,7 +103,7 @@ class TestAsyncClientConnection:
         """Client can connect without waiting for init."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -124,7 +124,7 @@ class TestAsyncClientConfigRetrieval:
         """Getting a missing config raises ConfigNotFoundError."""
         mock_server.send_init([create_config("existing", True)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -135,7 +135,7 @@ class TestAsyncClientConfigRetrieval:
         """Getting a missing config with default returns the default."""
         mock_server.send_init([])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -146,7 +146,7 @@ class TestAsyncClientConfigRetrieval:
         """Getting a missing config with default=None returns None."""
         mock_server.send_init([])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -157,7 +157,7 @@ class TestAsyncClientConfigRetrieval:
         """Getting a missing config with default=False returns False."""
         mock_server.send_init([])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -168,7 +168,7 @@ class TestAsyncClientConfigRetrieval:
         """Getting a missing config with default=0 returns 0."""
         mock_server.send_init([])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -179,7 +179,7 @@ class TestAsyncClientConfigRetrieval:
         """Fallback configs are used when server doesn't have them."""
         mock_server.send_init([create_config("from-server", "server")])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             fallbacks={"fallback-config": "fallback-value"},
@@ -191,7 +191,7 @@ class TestAsyncClientConfigRetrieval:
         """Server config overrides fallback when present."""
         mock_server.send_init([create_config("config", "from-server")])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             fallbacks={"config": "from-fallback"},
@@ -207,7 +207,7 @@ class TestAsyncClientConfigRetrieval:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             required=["required1", "required2"],
@@ -218,7 +218,7 @@ class TestAsyncClientConfigRetrieval:
         """Missing required configs raises error."""
         mock_server.send_init([create_config("required1", True)])
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             required=["required1", "required2", "required3"],
@@ -235,7 +235,7 @@ class TestAsyncClientConfigRetrieval:
         """Accessing closed client raises ClientClosedError."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -267,7 +267,7 @@ class TestAsyncClientOverrides:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -296,7 +296,7 @@ class TestAsyncClientOverrides:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             context={"beta": True},
@@ -327,7 +327,7 @@ class TestAsyncClientOverrides:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             context={"region": "eu"},
@@ -347,7 +347,7 @@ class TestAsyncClientSubscriptions:
 
         changes: list[tuple[str, bool]] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -372,7 +372,7 @@ class TestAsyncClientSubscriptions:
 
         changes: list[tuple[str, bool]] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -402,7 +402,7 @@ class TestAsyncClientSubscriptions:
 
         changes: list[bool] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -429,7 +429,7 @@ class TestAsyncClientSubscriptions:
 
         changes: list[bool] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -460,7 +460,7 @@ class TestAsyncClientReconnection:
         """Client reconnects when server disconnects."""
         mock_server.send_init([create_config("feature", True)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             retry_delay_ms=100,
@@ -489,7 +489,7 @@ class TestAsyncClientReconnection:
 
         threading.Thread(target=send_init_after_retry, daemon=True).start()
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             retry_delay_ms=100,
@@ -509,7 +509,7 @@ class TestAsyncClientJsonValues:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -525,7 +525,7 @@ class TestAsyncClientJsonValues:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -541,7 +541,7 @@ class TestAsyncClientConnectionEdgeCases:
         """Connecting a closed client raises error."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -554,7 +554,7 @@ class TestAsyncClientConnectionEdgeCases:
         """Calling close() twice doesn't raise."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -564,7 +564,7 @@ class TestAsyncClientConnectionEdgeCases:
 
     async def test_close_without_connect_is_safe(self, mock_server: MockSSEServer):
         """Calling close() without connect() doesn't raise."""
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -572,7 +572,7 @@ class TestAsyncClientConnectionEdgeCases:
 
     async def test_is_initialized_before_connect(self, mock_server: MockSSEServer):
         """is_initialized() returns False before connect."""
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -583,7 +583,7 @@ class TestAsyncClientConnectionEdgeCases:
         """Client handles empty init event (no configs)."""
         mock_server.send_init([])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -596,7 +596,7 @@ class TestAsyncClientConnectionEdgeCases:
         configs = [create_config(f"config-{i}", i) for i in range(100)]
         mock_server.send_init(configs)
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -611,7 +611,7 @@ class TestAsyncClientConfigValueEdgeCases:
         """Config with null value."""
         mock_server.send_init([create_config("nullable", None)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -621,7 +621,7 @@ class TestAsyncClientConfigValueEdgeCases:
         """Config with empty string value."""
         mock_server.send_init([create_config("empty", "")])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -631,7 +631,7 @@ class TestAsyncClientConfigValueEdgeCases:
         """Config with zero value (falsy but valid)."""
         mock_server.send_init([create_config("zero", 0)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -641,7 +641,7 @@ class TestAsyncClientConfigValueEdgeCases:
         """Config with false value (falsy but valid)."""
         mock_server.send_init([create_config("disabled", False)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -656,7 +656,7 @@ class TestAsyncClientConfigValueEdgeCases:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -668,7 +668,7 @@ class TestAsyncClientConfigValueEdgeCases:
         large_value = "x" * 10000
         mock_server.send_init([create_config("large", large_value)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -679,7 +679,7 @@ class TestAsyncClientConfigValueEdgeCases:
         nested = {"level1": {"level2": {"level3": {"value": "deep"}}}}
         mock_server.send_init([create_config("nested", nested)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -717,7 +717,7 @@ class TestAsyncClientOverrideEdgeCases:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -747,7 +747,7 @@ class TestAsyncClientOverrideEdgeCases:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -778,7 +778,7 @@ class TestAsyncClientOverrideEdgeCases:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -806,7 +806,7 @@ class TestAsyncClientOverrideEdgeCases:
             ]
         )
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -825,7 +825,7 @@ class TestAsyncClientSubscriptionEdgeCases:
 
         successful_changes: list[bool] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -851,7 +851,7 @@ class TestAsyncClientSubscriptionEdgeCases:
 
         successful_changes: list[bool] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -877,7 +877,7 @@ class TestAsyncClientSubscriptionEdgeCases:
         changes1: list[bool] = []
         changes2: list[bool] = []
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -894,7 +894,7 @@ class TestAsyncClientSubscriptionEdgeCases:
         """Config changes update the local cache immediately."""
         mock_server.send_init([create_config("counter", 0)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -912,7 +912,7 @@ class TestAsyncClientErrorHandling:
         """Client handles 400 Bad Request."""
         mock_server.set_status_code(400)
 
-        client = AsyncReplaneClient(
+        client = AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=1000,
@@ -934,7 +934,7 @@ class TestAsyncClientErrorHandling:
 
         threading.Thread(target=send_init_later, daemon=True).start()
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=3000,
@@ -946,7 +946,7 @@ class TestAsyncClientErrorHandling:
         """New configs can be added via config_change events."""
         mock_server.send_init([create_config("existing", True)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -968,7 +968,7 @@ class TestAsyncClientDebugMode:
         """Debug mode can be enabled without errors."""
         mock_server.send_init([create_config("feature", True)])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             debug=True,
@@ -983,7 +983,7 @@ class TestAsyncClientInactivityTimeout:
         """Client reconnects when server stops sending events."""
         mock_server.send_init([create_config("feature", "initial")])
 
-        async with AsyncReplaneClient(
+        async with AsyncReplane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             inactivity_timeout_ms=1000,  # 1 second timeout

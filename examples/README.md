@@ -45,7 +45,7 @@ Each example is a standalone project that can be copied and used as a starting p
 
 ### basic-sync
 
-Demonstrates the fundamental usage of `SyncReplaneClient`:
+Demonstrates the fundamental usage of `Replane`:
 - Context manager usage
 - Reading feature flags and configs
 - Passing context for override evaluation
@@ -54,7 +54,7 @@ Demonstrates the fundamental usage of `SyncReplaneClient`:
 
 ### basic-async
 
-Demonstrates the asynchronous `AsyncReplaneClient`:
+Demonstrates the asynchronous `AsyncReplane`:
 - Async context manager usage
 - Real-time update subscriptions
 - Async callbacks

@@ -11,16 +11,16 @@ FastAPI's async nature makes it a perfect fit for the async Replane client.
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
 # Global client instance
-_replane: AsyncReplaneClient | None = None
+_replane: AsyncReplane | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage Replane client lifecycle."""
     global _replane
-    _replane = AsyncReplaneClient(
+    _replane = AsyncReplane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
@@ -30,13 +30,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-def get_replane() -> AsyncReplaneClient:
+def get_replane() -> AsyncReplane:
     """Dependency to get Replane client."""
     assert _replane is not None
     return _replane
 
 @app.get("/items")
-async def get_items(replane: AsyncReplaneClient = Depends(get_replane)):
+async def get_items(replane: AsyncReplane = Depends(get_replane)):
     max_items = replane.get("max-items-per-page")
     return {"max_items": max_items}
 ```
@@ -49,7 +49,7 @@ from fastapi import Request
 @app.get("/features")
 async def get_features(
     request: Request,
-    replane: AsyncReplaneClient = Depends(get_replane),
+    replane: AsyncReplane = Depends(get_replane),
 ):
     # Build context from request/user
     context = {
@@ -71,7 +71,7 @@ Create a dependency that automatically includes user context:
 from fastapi import Request, Depends
 
 class ReplaneWithContext:
-    def __init__(self, client: AsyncReplaneClient, context: dict):
+    def __init__(self, client: AsyncReplane, context: dict):
         self._client = client
         self._context = context
 
@@ -81,7 +81,7 @@ class ReplaneWithContext:
 
 def get_replane_with_context(
     request: Request,
-    replane: AsyncReplaneClient = Depends(get_replane),
+    replane: AsyncReplane = Depends(get_replane),
 ) -> ReplaneWithContext:
     context = {}
     if hasattr(request.state, "user"):
@@ -104,17 +104,17 @@ Flask works well with the synchronous Replane client.
 
 ```python
 from flask import Flask, g
-from replane import SyncReplaneClient
+from replane import Replane
 
 app = Flask(__name__)
 
 # Store client at module level
-_replane: SyncReplaneClient | None = None
+_replane: Replane | None = None
 
-def get_replane() -> SyncReplaneClient:
+def get_replane() -> Replane:
     global _replane
     if _replane is None:
-        _replane = SyncReplaneClient(
+        _replane = Replane(
             base_url="https://replane.example.com",
             sdk_key="rp_...",
         )
@@ -132,7 +132,7 @@ def get_items():
 
 ```python
 from flask import Flask, current_app
-from replane import SyncReplaneClient
+from replane import Replane
 
 def create_app():
     app = Flask(__name__)
@@ -143,7 +143,7 @@ def create_app():
     @app.before_request
     def init_replane():
         if app.replane is None:
-            app.replane = SyncReplaneClient(
+            app.replane = Replane(
                 base_url=app.config["REPLANE_URL"],
                 sdk_key=app.config["REPLANE_SDK_KEY"],
             )
@@ -162,11 +162,11 @@ def features():
 
 ```python
 from flask import Flask, _app_ctx_stack
-from replane import SyncReplaneClient
+from replane import Replane
 
 class FlaskReplane:
     def __init__(self, app: Flask | None = None):
-        self._replane: SyncReplaneClient | None = None
+        self._replane: Replane | None = None
         if app is not None:
             self.init_app(app)
 
@@ -179,10 +179,10 @@ class FlaskReplane:
                 self._replane.close()
 
     @property
-    def client(self) -> SyncReplaneClient:
+    def client(self) -> Replane:
         if self._replane is None:
             from flask import current_app
-            self._replane = SyncReplaneClient(
+            self._replane = Replane(
                 base_url=current_app.config["REPLANE_URL"],
                 sdk_key=current_app.config["REPLANE_SDK_KEY"],
             )
@@ -217,14 +217,14 @@ REPLANE_SDK_KEY = "rp_..."
 
 # replane_client.py
 from django.conf import settings
-from replane import SyncReplaneClient
+from replane import Replane
 
-_replane: SyncReplaneClient | None = None
+_replane: Replane | None = None
 
-def get_replane() -> SyncReplaneClient:
+def get_replane() -> Replane:
     global _replane
     if _replane is None:
-        _replane = SyncReplaneClient(
+        _replane = Replane(
             base_url=settings.REPLANE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
         )
@@ -248,14 +248,14 @@ def features_view(request):
 ```python
 # replane_client.py
 from django.conf import settings
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
-_replane: AsyncReplaneClient | None = None
+_replane: AsyncReplane | None = None
 
-async def get_replane() -> AsyncReplaneClient:
+async def get_replane() -> AsyncReplane:
     global _replane
     if _replane is None:
-        _replane = AsyncReplaneClient(
+        _replane = AsyncReplane(
             base_url=settings.REPLANE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
         )
@@ -298,13 +298,13 @@ Similar to FastAPI (Starlette is FastAPI's foundation):
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
-_replane: AsyncReplaneClient | None = None
+_replane: AsyncReplane | None = None
 
 async def startup():
     global _replane
-    _replane = AsyncReplaneClient(
+    _replane = AsyncReplane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
@@ -329,13 +329,13 @@ app = Starlette(
 
 ```python
 from aiohttp import web
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
 async def create_app():
     app = web.Application()
 
     async def on_startup(app):
-        app["replane"] = AsyncReplaneClient(
+        app["replane"] = AsyncReplane(
             base_url="https://replane.example.com",
             sdk_key="rp_...",
         )

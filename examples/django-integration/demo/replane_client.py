@@ -6,17 +6,17 @@ ensuring a single connection is shared across all requests.
 
 from typing import Any
 
-from replane import SyncReplaneClient
+from replane import Replane
 
 # Global client instance
-_client: SyncReplaneClient | None = None
+_client: Replane | None = None
 
 
 def init_replane(
     base_url: str,
     sdk_key: str,
     fallbacks: dict[str, Any] | None = None,
-) -> SyncReplaneClient:
+) -> Replane:
     """Initialize the global Replane client.
 
     This should be called once during Django startup (in AppConfig.ready()).
@@ -34,7 +34,7 @@ def init_replane(
     if _client is not None:
         return _client
 
-    _client = SyncReplaneClient(
+    _client = Replane(
         base_url=base_url,
         sdk_key=sdk_key,
         fallbacks=fallbacks or {},
@@ -44,7 +44,7 @@ def init_replane(
     return _client
 
 
-def get_replane() -> SyncReplaneClient:
+def get_replane() -> Replane:
     """Get the Replane client instance.
 
     Returns:

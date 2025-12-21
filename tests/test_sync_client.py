@@ -1,4 +1,4 @@
-"""Integration tests for SyncReplaneClient."""
+"""Integration tests for Replane."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from replane import SyncReplaneClient
+from replane import Replane
 from replane.errors import (
     AuthenticationError,
     ClientClosedError,
@@ -35,7 +35,7 @@ class TestSyncClientConnection:
             ]
         )
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -51,7 +51,7 @@ class TestSyncClientConnection:
         """Client works as context manager."""
         mock_server.send_init([create_config("value", 42)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -60,7 +60,7 @@ class TestSyncClientConnection:
     def test_initialization_timeout(self, mock_server: MockSSEServer):
         """Client raises TimeoutError when init takes too long."""
         # Don't send any events - let it timeout
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=500,
@@ -76,7 +76,7 @@ class TestSyncClientConnection:
         """Client raises AuthenticationError on 401 response."""
         mock_server.set_auth_required("correct_key")
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="wrong_key",
             initialization_timeout_ms=2000,
@@ -92,7 +92,7 @@ class TestSyncClientConnection:
         mock_server.set_auth_required("rp_correct_key")
         mock_server.send_init([create_config("feature", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_correct_key",
         ) as client:
@@ -102,7 +102,7 @@ class TestSyncClientConnection:
         """Client can connect without waiting for init."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -124,7 +124,7 @@ class TestSyncClientConfigRetrieval:
         """Getting a missing config raises ConfigNotFoundError."""
         mock_server.send_init([create_config("existing", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -135,7 +135,7 @@ class TestSyncClientConfigRetrieval:
         """Getting a missing config with default returns the default."""
         mock_server.send_init([])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -146,7 +146,7 @@ class TestSyncClientConfigRetrieval:
         """Getting a missing config with default=None returns None."""
         mock_server.send_init([])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -157,7 +157,7 @@ class TestSyncClientConfigRetrieval:
         """Getting a missing config with default=False returns False."""
         mock_server.send_init([])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -168,7 +168,7 @@ class TestSyncClientConfigRetrieval:
         """Getting a missing config with default=0 returns 0."""
         mock_server.send_init([])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -179,7 +179,7 @@ class TestSyncClientConfigRetrieval:
         """Fallback configs are used when server doesn't have them."""
         mock_server.send_init([create_config("from-server", "server")])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             fallbacks={"fallback-config": "fallback-value"},
@@ -191,7 +191,7 @@ class TestSyncClientConfigRetrieval:
         """Server config overrides fallback when present."""
         mock_server.send_init([create_config("config", "from-server")])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             fallbacks={"config": "from-fallback"},
@@ -207,7 +207,7 @@ class TestSyncClientConfigRetrieval:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             required=["required1", "required2"],
@@ -218,7 +218,7 @@ class TestSyncClientConfigRetrieval:
         """Missing required configs raises error."""
         mock_server.send_init([create_config("required1", True)])
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             required=["required1", "required2", "required3"],
@@ -235,7 +235,7 @@ class TestSyncClientConfigRetrieval:
         """Accessing closed client raises ClientClosedError."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -267,7 +267,7 @@ class TestSyncClientOverrides:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -296,7 +296,7 @@ class TestSyncClientOverrides:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             context={"beta": True},
@@ -327,7 +327,7 @@ class TestSyncClientOverrides:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             context={"region": "eu"},
@@ -347,7 +347,7 @@ class TestSyncClientSubscriptions:
 
         changes: list[tuple[str, bool]] = []
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -377,7 +377,7 @@ class TestSyncClientSubscriptions:
 
         changes: list[bool] = []
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -404,7 +404,7 @@ class TestSyncClientSubscriptions:
 
         changes: list[bool] = []
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -435,7 +435,7 @@ class TestSyncClientReconnection:
         """Client reconnects when server disconnects."""
         mock_server.send_init([create_config("feature", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             retry_delay_ms=100,
@@ -464,7 +464,7 @@ class TestSyncClientReconnection:
 
         threading.Thread(target=send_init_after_retry, daemon=True).start()
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             retry_delay_ms=100,
@@ -484,7 +484,7 @@ class TestSyncClientJsonValues:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -500,7 +500,7 @@ class TestSyncClientJsonValues:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -516,7 +516,7 @@ class TestSyncClientConnectionEdgeCases:
         """Connecting a closed client raises error."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -529,7 +529,7 @@ class TestSyncClientConnectionEdgeCases:
         """Calling close() twice doesn't raise."""
         mock_server.send_init([create_config("feature", True)])
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -539,7 +539,7 @@ class TestSyncClientConnectionEdgeCases:
 
     def test_close_without_connect_is_safe(self, mock_server: MockSSEServer):
         """Calling close() without connect() doesn't raise."""
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -547,7 +547,7 @@ class TestSyncClientConnectionEdgeCases:
 
     def test_is_initialized_before_connect(self, mock_server: MockSSEServer):
         """is_initialized() returns False before connect."""
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -558,7 +558,7 @@ class TestSyncClientConnectionEdgeCases:
         """Client handles empty init event (no configs)."""
         mock_server.send_init([])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -572,7 +572,7 @@ class TestSyncClientConnectionEdgeCases:
         configs = [create_config(f"config-{i}", i) for i in range(100)]
         mock_server.send_init(configs)
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -584,7 +584,7 @@ class TestSyncClientConnectionEdgeCases:
         mock_server.set_delay(0.5)  # 500ms delay
         mock_server.send_init([create_config("feature", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=3000,
@@ -599,7 +599,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with null value."""
         mock_server.send_init([create_config("nullable", None)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -609,7 +609,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with empty string value."""
         mock_server.send_init([create_config("empty", "")])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -619,7 +619,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with zero value (falsy but valid)."""
         mock_server.send_init([create_config("zero", 0)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -629,7 +629,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with false value (falsy but valid)."""
         mock_server.send_init([create_config("disabled", False)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -644,7 +644,7 @@ class TestSyncClientConfigValueEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -662,7 +662,7 @@ class TestSyncClientConfigValueEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -675,7 +675,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with float value."""
         mock_server.send_init([create_config("ratio", 3.14159)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -685,7 +685,7 @@ class TestSyncClientConfigValueEdgeCases:
         """Config with negative number."""
         mock_server.send_init([create_config("offset", -42)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -696,7 +696,7 @@ class TestSyncClientConfigValueEdgeCases:
         large_value = "x" * 10000
         mock_server.send_init([create_config("large", large_value)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -708,7 +708,7 @@ class TestSyncClientConfigValueEdgeCases:
         nested = {"level1": {"level2": {"level3": {"value": "deep"}}}}
         mock_server.send_init([create_config("nested", nested)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -720,7 +720,7 @@ class TestSyncClientConfigValueEdgeCases:
         mixed = [1, "two", True, None, {"key": "value"}, [1, 2, 3]]
         mock_server.send_init([create_config("mixed", mixed)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -758,7 +758,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -789,7 +789,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -821,7 +821,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -863,7 +863,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -892,7 +892,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -921,7 +921,7 @@ class TestSyncClientOverrideEdgeCases:
             ]
         )
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -940,7 +940,7 @@ class TestSyncClientSubscriptionEdgeCases:
 
         successful_changes: list[bool] = []
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -968,7 +968,7 @@ class TestSyncClientSubscriptionEdgeCases:
         changes1: list[bool] = []
         changes2: list[bool] = []
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -985,7 +985,7 @@ class TestSyncClientSubscriptionEdgeCases:
         """Unsubscribing same callback twice doesn't raise."""
         mock_server.send_init([create_config("feature", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -1003,7 +1003,7 @@ class TestSyncClientSubscriptionEdgeCases:
 
         changes: list[bool] = []
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         )
@@ -1025,7 +1025,7 @@ class TestSyncClientSubscriptionEdgeCases:
         """Config changes update the local cache immediately."""
         mock_server.send_init([create_config("counter", 0)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -1047,7 +1047,7 @@ class TestSyncClientErrorHandling:
         """Client handles 400 Bad Request."""
         mock_server.set_status_code(400)
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=1000,
@@ -1064,7 +1064,7 @@ class TestSyncClientErrorHandling:
         """Client handles 403 Forbidden."""
         mock_server.set_status_code(403)
 
-        client = SyncReplaneClient(
+        client = Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=1000,
@@ -1088,7 +1088,7 @@ class TestSyncClientErrorHandling:
 
         threading.Thread(target=send_init_later, daemon=True).start()
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             initialization_timeout_ms=3000,
@@ -1100,7 +1100,7 @@ class TestSyncClientErrorHandling:
         """New configs can be added via config_change events."""
         mock_server.send_init([create_config("existing", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
         ) as client:
@@ -1123,7 +1123,7 @@ class TestSyncClientDebugMode:
         """Debug mode can be enabled without errors."""
         mock_server.send_init([create_config("feature", True)])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             debug=True,
@@ -1138,7 +1138,7 @@ class TestSyncClientInactivityTimeout:
         """Client reconnects when server stops sending events."""
         mock_server.send_init([create_config("feature", "initial")])
 
-        with SyncReplaneClient(
+        with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
             inactivity_timeout_ms=2000,  # 2 second timeout

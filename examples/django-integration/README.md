@@ -162,7 +162,7 @@ class MyView(View):
 
 ## What This Example Shows
 
-- Initializing `SyncReplaneClient` at Django startup
+- Initializing `Replane` at Django startup
 - Singleton pattern for sharing client across requests
 - Custom middleware for maintenance mode
 - Building evaluation context from request headers

@@ -18,7 +18,7 @@ T = TypeVar("T")
 class InMemoryReplaneClient:
     """An in-memory Replane client for testing.
 
-    This client provides the same interface as SyncReplaneClient but stores
+    This client provides the same interface as Replane but stores
     all configs in memory. It's useful for unit tests where you don't want
     to connect to a real Replane server.
 

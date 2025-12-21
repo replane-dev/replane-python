@@ -1,12 +1,12 @@
 """Basic asynchronous Replane client example.
 
-This example demonstrates how to use the AsyncReplaneClient
+This example demonstrates how to use the AsyncReplane
 for async/await applications.
 """
 
 import asyncio
 
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
 # Configuration - replace with your actual values
 BASE_URL = "https://your-replane-server.com"
@@ -15,7 +15,7 @@ SDK_KEY = "sk_your_sdk_key_here"
 
 async def main():
     # Using async context manager (recommended)
-    async with AsyncReplaneClient(
+    async with AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         # Optional: set default context for all evaluations
@@ -61,7 +61,7 @@ async def main():
 
 async def example_manual_lifecycle():
     """Example showing manual connect/close lifecycle."""
-    client = AsyncReplaneClient(
+    client = AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     )
@@ -81,7 +81,7 @@ async def example_manual_lifecycle():
 
 async def example_with_subscriptions():
     """Example showing how to subscribe to config changes."""
-    async with AsyncReplaneClient(
+    async with AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     ) as client:
@@ -108,7 +108,7 @@ async def example_with_subscriptions():
 
 async def example_async_callback():
     """Example showing async callbacks for config changes."""
-    async with AsyncReplaneClient(
+    async with AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     ) as client:

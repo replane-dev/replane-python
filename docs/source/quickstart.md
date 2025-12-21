@@ -15,10 +15,10 @@ This guide will help you get started with the Replane Python SDK in minutes.
 The sync client is the simplest way to get started:
 
 ```python
-from replane import SyncReplaneClient
+from replane import Replane
 
 # Using context manager (recommended)
-with SyncReplaneClient(
+with Replane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
@@ -43,10 +43,10 @@ with SyncReplaneClient(
 For async applications (FastAPI, aiohttp, etc.), use the async client:
 
 ```python
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
 async def main():
-    async with AsyncReplaneClient(
+    async with AsyncReplane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     ) as replane:
@@ -139,7 +139,7 @@ Handle errors gracefully:
 
 ```python
 from replane import (
-    SyncReplaneClient,
+    Replane,
     ConfigNotFoundError,
     TimeoutError,
     AuthenticationError,
@@ -147,7 +147,7 @@ from replane import (
 )
 
 try:
-    with SyncReplaneClient(
+    with Replane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     ) as replane:

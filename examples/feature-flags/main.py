@@ -4,14 +4,14 @@ This example demonstrates various use cases for feature flags and
 dynamic configuration with the Replane SDK.
 """
 
-from replane import SyncReplaneClient
+from replane import Replane
 
 # Configuration - replace with your actual values
 BASE_URL = "https://your-replane-server.com"
 SDK_KEY = "sk_your_sdk_key_here"
 
 
-def demo_basic_feature_flags(client: SyncReplaneClient):
+def demo_basic_feature_flags(client: Replane):
     """Basic boolean feature flags."""
     print("\n=== Basic Feature Flags ===")
 
@@ -27,7 +27,7 @@ def demo_basic_feature_flags(client: SyncReplaneClient):
         print("Using legacy checkout flow")
 
 
-def demo_user_targeting(client: SyncReplaneClient):
+def demo_user_targeting(client: Replane):
     """Feature flags with user targeting."""
     print("\n=== User Targeting ===")
 
@@ -48,7 +48,7 @@ def demo_user_targeting(client: SyncReplaneClient):
         print(f"{user['name']}: beta feature = {beta_enabled}")
 
 
-def demo_plan_based_limits(client: SyncReplaneClient):
+def demo_plan_based_limits(client: Replane):
     """Dynamic limits based on subscription plan."""
     print("\n=== Plan-Based Limits ===")
 
@@ -81,7 +81,7 @@ def demo_plan_based_limits(client: SyncReplaneClient):
         )
 
 
-def demo_regional_features(client: SyncReplaneClient):
+def demo_regional_features(client: Replane):
     """Features enabled for specific regions."""
     print("\n=== Regional Features ===")
 
@@ -104,7 +104,7 @@ def demo_regional_features(client: SyncReplaneClient):
         print(f"{region}: Apple Pay = {apple_pay}, Crypto = {crypto}")
 
 
-def demo_gradual_rollout(client: SyncReplaneClient):
+def demo_gradual_rollout(client: Replane):
     """Gradual feature rollout (percentage-based)."""
     print("\n=== Gradual Rollout ===")
 
@@ -128,7 +128,7 @@ def demo_gradual_rollout(client: SyncReplaneClient):
     print(f"\nEnabled for {enabled_count}/{len(users)} users ({enabled_count * 10}%)")
 
 
-def demo_environment_configs(client: SyncReplaneClient):
+def demo_environment_configs(client: Replane):
     """Environment-specific configuration."""
     print("\n=== Environment Configs ===")
 
@@ -159,7 +159,7 @@ def demo_environment_configs(client: SyncReplaneClient):
         print(f"{env:12} | Log: {log_level:5} | Debug: {debug} | Cache TTL: {cache_ttl}s")
 
 
-def demo_complex_conditions(client: SyncReplaneClient):
+def demo_complex_conditions(client: Replane):
     """Features with multiple conditions."""
     print("\n=== Complex Conditions ===")
 
@@ -182,7 +182,7 @@ def demo_complex_conditions(client: SyncReplaneClient):
         )
 
 
-def demo_real_time_updates(client: SyncReplaneClient):
+def demo_real_time_updates(client: Replane):
     """Subscribe to real-time config changes."""
     print("\n=== Real-Time Updates ===")
 
@@ -209,7 +209,7 @@ def demo_real_time_updates(client: SyncReplaneClient):
 
 
 def main():
-    with SyncReplaneClient(
+    with Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         # Fallback values ensure the app works even if server is unreachable

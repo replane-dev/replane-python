@@ -97,7 +97,7 @@ FastAPI automatically generates OpenAPI documentation:
 
 ## What This Example Shows
 
-- Using `AsyncReplaneClient` with FastAPI's lifespan handler
+- Using `AsyncReplane` with FastAPI's lifespan handler
 - FastAPI dependency injection for Replane client
 - Building evaluation context from request headers
 - Using feature flags to control UI features

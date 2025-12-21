@@ -17,7 +17,7 @@ def mock_server():
     Example:
         def test_something(mock_server):
             mock_server.send_init([{"name": "feature", "value": True}])
-            client = SyncReplaneClient(base_url=mock_server.url, sdk_key="test")
+            client = Replane(base_url=mock_server.url, sdk_key="test")
             client.connect()
             assert client.get("feature") is True
             client.close()

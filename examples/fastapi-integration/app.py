@@ -11,14 +11,14 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
-from replane import AsyncReplaneClient
+from replane import AsyncReplane
 
 # Configuration from environment variables
 BASE_URL = os.environ.get("REPLANE_BASE_URL", "https://your-replane-server.com")
 SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "sk_your_sdk_key_here")
 
 # Global client instance
-replane_client: AsyncReplaneClient | None = None
+replane_client: AsyncReplane | None = None
 
 
 @asynccontextmanager
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     global replane_client
 
     # Initialize and connect the Replane client
-    replane_client = AsyncReplaneClient(
+    replane_client = AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         fallbacks={
@@ -53,7 +53,7 @@ app = FastAPI(
 
 
 # Dependency to get the Replane client
-def get_replane() -> AsyncReplaneClient:
+def get_replane() -> AsyncReplane:
     if replane_client is None:
         raise HTTPException(status_code=503, detail="Configuration service unavailable")
     return replane_client
@@ -109,7 +109,7 @@ async def check_maintenance_mode(request: Request, call_next):
 
 @app.get("/", response_model=WelcomeResponse)
 async def index(
-    replane: Annotated[AsyncReplaneClient, Depends(get_replane)],
+    replane: Annotated[AsyncReplane, Depends(get_replane)],
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Homepage with feature flag check."""
@@ -123,7 +123,7 @@ async def index(
 
 @app.get("/api/items", response_model=ItemsResponse)
 async def get_items(
-    replane: Annotated[AsyncReplaneClient, Depends(get_replane)],
+    replane: Annotated[AsyncReplane, Depends(get_replane)],
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """List items with configurable rate limiting."""
@@ -145,7 +145,7 @@ async def get_items(
 @app.post("/api/upload", response_model=UploadResponse)
 async def upload(
     request: Request,
-    replane: Annotated[AsyncReplaneClient, Depends(get_replane)],
+    replane: Annotated[AsyncReplane, Depends(get_replane)],
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Upload endpoint with configurable size limit."""
@@ -168,7 +168,7 @@ async def upload(
 
 @app.get("/api/config", response_model=ConfigResponse)
 async def get_config(
-    replane: Annotated[AsyncReplaneClient, Depends(get_replane)],
+    replane: Annotated[AsyncReplane, Depends(get_replane)],
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Debug endpoint to view current config values."""

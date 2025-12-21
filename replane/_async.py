@@ -52,7 +52,7 @@ def _setup_debug_logging() -> None:
         logger.addHandler(handler)
 
 
-class AsyncReplaneClient:
+class AsyncReplane:
     """Asynchronous Replane client with background SSE streaming.
 
     This client maintains a persistent SSE connection to receive real-time
@@ -61,14 +61,14 @@ class AsyncReplaneClient:
     Requires httpx: pip install replane[async]
 
     Example:
-        >>> async with AsyncReplaneClient(
+        >>> async with AsyncReplane(
         ...     base_url="https://replane.example.com",
         ...     sdk_key="sk_...",
         ... ) as client:
         ...     value = client.get("feature-flag")
 
     Or with manual lifecycle:
-        >>> client = AsyncReplaneClient(...)
+        >>> client = AsyncReplane(...)
         >>> await client.connect()
         >>> value = client.get("feature-flag")
         >>> await client.close()
@@ -113,7 +113,7 @@ class AsyncReplaneClient:
         if debug:
             _setup_debug_logging()
             logger.debug(
-                "Initializing AsyncReplaneClient: base_url=%s, "
+                "Initializing AsyncReplane: base_url=%s, "
                 "request_timeout_ms=%d, initialization_timeout_ms=%d, "
                 "retry_delay_ms=%d, inactivity_timeout_ms=%d",
                 base_url,
@@ -337,7 +337,7 @@ class AsyncReplaneClient:
             await self._http_client.aclose()
             logger.debug("HTTP client closed")
 
-    async def __aenter__(self) -> AsyncReplaneClient:
+    async def __aenter__(self) -> AsyncReplane:
         await self.connect()
         return self
 

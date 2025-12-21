@@ -38,7 +38,7 @@ python main.py
 
 ## What This Example Shows
 
-- Using the `SyncReplaneClient` with context manager
+- Using the `Replane` with context manager
 - Reading boolean feature flags
 - Reading numeric configuration values
 - Passing context for override evaluation

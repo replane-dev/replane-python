@@ -1,10 +1,10 @@
 """Basic synchronous Replane client example.
 
-This example demonstrates how to use the SyncReplaneClient
+This example demonstrates how to use the Replane
 to read feature flags and configuration values.
 """
 
-from replane import SyncReplaneClient
+from replane import Replane
 
 # Configuration - replace with your actual values
 BASE_URL = "https://your-replane-server.com"
@@ -13,7 +13,7 @@ SDK_KEY = "sk_your_sdk_key_here"
 
 def main():
     # Using context manager (recommended)
-    with SyncReplaneClient(
+    with Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         # Optional: set default context for all evaluations
@@ -48,7 +48,7 @@ def main():
 
 def example_manual_lifecycle():
     """Example showing manual connect/close lifecycle."""
-    client = SyncReplaneClient(
+    client = Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     )
@@ -68,7 +68,7 @@ def example_manual_lifecycle():
 
 def example_non_blocking_connect():
     """Example showing non-blocking connection."""
-    client = SyncReplaneClient(
+    client = Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         fallbacks={"my-config": "default-value"},

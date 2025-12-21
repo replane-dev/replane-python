@@ -39,7 +39,7 @@ Each `ReplaneError` has a `code` attribute from the `ErrorCode` enum:
 
 ```python
 from replane import (
-    SyncReplaneClient,
+    Replane,
     ReplaneError,
     ConfigNotFoundError,
     TimeoutError,
@@ -47,7 +47,7 @@ from replane import (
 )
 
 try:
-    with SyncReplaneClient(
+    with Replane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     ) as replane:
@@ -112,7 +112,7 @@ except ConfigNotFoundError as e:
 value = replane.get("config", default="fallback")
 
 # With fallbacks during init
-replane = SyncReplaneClient(
+replane = Replane(
     ...,
     fallbacks={"config": "fallback"},
 )
@@ -137,7 +137,7 @@ except TimeoutError as e:
 **Prevention:** Increase timeout values:
 
 ```python
-replane = SyncReplaneClient(
+replane = Replane(
     ...,
     initialization_timeout_ms=10000,  # 10 seconds
     request_timeout_ms=5000,  # 5 seconds
@@ -190,7 +190,7 @@ Raised when attempting operations on a closed client.
 ```python
 from replane import ClientClosedError
 
-replane = SyncReplaneClient(...)
+replane = Replane(...)
 replane.connect()
 replane.close()
 
@@ -207,7 +207,7 @@ Raised when the client hasn't finished initializing.
 ```python
 from replane import NotInitializedError
 
-replane = SyncReplaneClient(...)
+replane = Replane(...)
 replane.connect(wait=False)  # Don't wait
 
 try:
@@ -222,10 +222,10 @@ except NotInitializedError:
 Raised when using features that require optional dependencies.
 
 ```python
-from replane import AsyncReplaneClient, MissingDependencyError
+from replane import AsyncReplane, MissingDependencyError
 
 try:
-    replane = AsyncReplaneClient(...)
+    replane = AsyncReplane(...)
 except MissingDependencyError as e:
     print(f"Missing: {e.dependency}")
     print(f"Install with: pip install replane[async]")

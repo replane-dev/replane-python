@@ -9,7 +9,7 @@ import os
 
 from flask import Flask, jsonify, request
 
-from replane import SyncReplaneClient
+from replane import Replane
 
 app = Flask(__name__)
 
@@ -18,7 +18,7 @@ BASE_URL = os.environ.get("REPLANE_BASE_URL", "https://your-replane-server.com")
 SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "sk_your_sdk_key_here")
 
 # Initialize the Replane client at application startup
-replane_client = SyncReplaneClient(
+replane_client = Replane(
     base_url=BASE_URL,
     sdk_key=SDK_KEY,
     fallbacks={
