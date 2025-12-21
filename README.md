@@ -2,9 +2,10 @@
 
 Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform with real-time updates.
 
-[![Documentation](https://img.shields.io/badge/docs-readthedocs-blue)](https://replane.readthedocs.io/en/latest/)
-
-**[Full Documentation](https://replane.readthedocs.io/en/latest/)**
+[![PyPI](https://img.shields.io/pypi/v/replane)](https://pypi.org/project/replane/)
+[![CI](https://github.com/replane-dev/replane-python/actions/workflows/ci.yml/badge.svg)](https://github.com/replane-dev/replane-python/actions)
+[![License](https://img.shields.io/github/license/replane-dev/replane-python)](https://github.com/replane-dev/replane-python/blob/main/LICENSE)
+[![Community](https://img.shields.io/badge/discussions-join-blue?logo=github)](https://github.com/orgs/replane-dev/discussions)
 
 ## Features
 
@@ -325,6 +326,10 @@ def get_items():
 - Python 3.10+
 - No dependencies for sync client
 - `httpx` for async client (`pip install replane[async]`)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
 
 ## Community
 
