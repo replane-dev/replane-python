@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from ._eval import evaluate_config
 from ._sse import SSEParser
+from .version import VERSION
 from .errors import (
     AuthenticationError,
     ClientClosedError,
@@ -33,6 +34,9 @@ T = TypeVar("T")
 
 # Sentinel value for detecting when no default was provided
 _MISSING: Any = object()
+
+# Default agent identifier
+DEFAULT_AGENT = f"replane-python/{VERSION}"
 
 logger = logging.getLogger("replane")
 
@@ -85,6 +89,7 @@ class Replane:
         initialization_timeout_ms: int = 5000,
         retry_delay_ms: int = 200,
         inactivity_timeout_ms: int = 30000,
+        agent: str | None = None,
         debug: bool = False,
     ) -> None:
         """Initialize the Replane client.
@@ -99,6 +104,7 @@ class Replane:
             initialization_timeout_ms: Timeout for initial connection.
             retry_delay_ms: Initial delay between retries.
             inactivity_timeout_ms: Max time without SSE events before reconnect.
+            agent: Agent identifier sent in X-Replane-Agent header. Defaults to SDK identifier.
             debug: Enable debug logging to see all client activity.
         """
         # Configure debug logging
@@ -130,6 +136,7 @@ class Replane:
         self._init_timeout = initialization_timeout_ms / 1000.0
         self._retry_delay = retry_delay_ms / 1000.0
         self._inactivity_timeout = inactivity_timeout_ms / 1000.0
+        self._agent = agent or DEFAULT_AGENT
 
         # Config storage
         self._configs: dict[str, Config] = {}
@@ -400,6 +407,7 @@ class Replane:
                 "Content-Type": "application/json",
                 "Accept": "text/event-stream",
                 "Cache-Control": "no-cache",
+                "X-Replane-Agent": self._agent,
             }
 
             logger.debug("Sending POST request to %s", path)
