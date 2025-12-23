@@ -12,7 +12,6 @@ from typing import Any, Awaitable, Callable, TypeVar
 
 from ._eval import evaluate_config
 from ._sse import SSEParser
-from .version import VERSION
 from .errors import (
     AuthenticationError,
     ClientClosedError,
@@ -24,6 +23,7 @@ from .errors import (
     from_http_status,
 )
 from .types import Config, ContextValue, parse_config
+from .version import VERSION
 
 try:
     import httpx
