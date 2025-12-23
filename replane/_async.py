@@ -105,7 +105,7 @@ class AsyncReplane:
             initialization_timeout_ms: Timeout for initial connection.
             retry_delay_ms: Initial delay between retries.
             inactivity_timeout_ms: Max time without SSE events before reconnect.
-            agent: Agent identifier sent in X-Replane-Agent header. Defaults to SDK identifier.
+            agent: Agent identifier sent in User-Agent header. Defaults to SDK identifier.
             debug: Enable debug logging to see all client activity.
 
         Raises:
@@ -409,7 +409,7 @@ class AsyncReplane:
             "Authorization": f"Bearer {self._sdk_key}",
             "Accept": "text/event-stream",
             "Cache-Control": "no-cache",
-            "X-Replane-Agent": self._agent,
+            "User-Agent": self._agent,
         }
 
         logger.debug("Connecting to SSE: %s", url)
