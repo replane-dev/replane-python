@@ -84,7 +84,7 @@ class AsyncReplane:
         sdk_key: str,
         *,
         context: dict[str, ContextValue] | None = None,
-        fallbacks: dict[str, Any] | None = None,
+        defaults: dict[str, Any] | None = None,
         required: list[str] | None = None,
         request_timeout_ms: int = 2000,
         initialization_timeout_ms: int = 5000,
@@ -99,7 +99,7 @@ class AsyncReplane:
             base_url: Base URL of the Replane server.
             sdk_key: SDK key for authentication.
             context: Default context for override evaluation.
-            fallbacks: Fallback values for configs if not loaded from server.
+            defaults: Default values for configs if not loaded or abs from server.
             required: List of config names that must be present on init.
             request_timeout_ms: Timeout for HTTP requests in milliseconds.
             initialization_timeout_ms: Timeout for initial connection.
@@ -130,15 +130,15 @@ class AsyncReplane:
             )
             if context:
                 logger.debug("Default context: %s", context)
-            if fallbacks:
-                logger.debug("Fallback configs: %s", list(fallbacks.keys()))
+            if defaults:
+                logger.debug("Default configs: %s", list(defaults.keys()))
             if required:
                 logger.debug("Required configs: %s", required)
 
         self._base_url = base_url.rstrip("/")
         self._sdk_key = sdk_key
         self._context = context or {}
-        self._fallbacks = fallbacks or {}
+        self._defaults = defaults or {}
         self._required = set(required or [])
         self._request_timeout = request_timeout_ms / 1000.0
         self._init_timeout = initialization_timeout_ms / 1000.0
@@ -150,8 +150,8 @@ class AsyncReplane:
         self._configs: dict[str, Config] = {}
         self._lock = asyncio.Lock()
 
-        # Initialize fallbacks
-        for name, value in self._fallbacks.items():
+        # Initialize defaults
+        for name, value in self._defaults.items():
             self._configs[name] = Config(name=name, value=value)
 
         # Subscription callbacks

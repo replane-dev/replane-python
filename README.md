@@ -81,8 +81,8 @@ client = Replane(
     # Default context applied to all get() calls
     context={"environment": "production"},
 
-    # Fallback values used if server is unavailable during init
-    fallbacks={
+    # Default values used if server is unavailable during init
+    defaults={
         "rate-limit": 100,
         "feature-enabled": False,
     },

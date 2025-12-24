@@ -182,7 +182,7 @@ class TestSyncClientConfigRetrieval:
         with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
-            fallbacks={"fallback-config": "fallback-value"},
+            defaults={"fallback-config": "fallback-value"},
         ) as client:
             assert client.get("from-server") == "server"
             assert client.get("fallback-config") == "fallback-value"
@@ -194,7 +194,7 @@ class TestSyncClientConfigRetrieval:
         with Replane(
             base_url=mock_server.url,
             sdk_key="rp_test_key",
-            fallbacks={"config": "from-fallback"},
+            defaults={"config": "from-fallback"},
         ) as client:
             assert client.get("config") == "from-server"
 

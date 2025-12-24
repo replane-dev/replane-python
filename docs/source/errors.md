@@ -19,19 +19,19 @@ ReplaneError (base class)
 
 Each `ReplaneError` has a `code` attribute from the `ErrorCode` enum:
 
-| Code | Description |
-|------|-------------|
-| `not_found` | Config doesn't exist |
-| `timeout` | Operation timed out |
-| `network_error` | Network request failed |
-| `auth_error` | Authentication failed (invalid SDK key) |
-| `forbidden` | Access denied |
-| `server_error` | Server returned 5xx error |
-| `client_error` | Client error (4xx) |
-| `closed` | Client has been closed |
-| `not_initialized` | Client not yet initialized |
-| `missing_dependency` | Required dependency not installed |
-| `unknown` | Unknown error |
+| Code                 | Description                             |
+| -------------------- | --------------------------------------- |
+| `not_found`          | Config doesn't exist                    |
+| `timeout`            | Operation timed out                     |
+| `network_error`      | Network request failed                  |
+| `auth_error`         | Authentication failed (invalid SDK key) |
+| `forbidden`          | Access denied                           |
+| `server_error`       | Server returned 5xx error               |
+| `client_error`       | Client error (4xx)                      |
+| `closed`             | Client has been closed                  |
+| `not_initialized`    | Client not yet initialized              |
+| `missing_dependency` | Required dependency not installed       |
+| `unknown`            | Unknown error                           |
 
 ## Handling Errors
 
@@ -103,18 +103,19 @@ except ConfigNotFoundError as e:
 ```
 
 **Attributes:**
+
 - `config_name: str` - Name of the missing config
 
-**Prevention:** Use `default` parameter or `fallbacks` option:
+**Prevention:** Use `default` parameter or `defaults` option:
 
 ```python
 # With default
 value = replane.get("config", default="fallback")
 
-# With fallbacks during init
+# With defaults during init
 replane = Replane(
     ...,
-    fallbacks={"config": "fallback"},
+    defaults={"config": "fallback"},
 )
 ```
 
@@ -132,6 +133,7 @@ except TimeoutError as e:
 ```
 
 **Attributes:**
+
 - `timeout_ms: int | None` - Timeout value in milliseconds
 
 **Prevention:** Increase timeout values:
@@ -158,6 +160,7 @@ except AuthenticationError:
 ```
 
 **Common causes:**
+
 - Invalid SDK key
 - SDK key for wrong environment
 - Revoked SDK key
@@ -178,6 +181,7 @@ except NetworkError as e:
 ```
 
 **Common causes:**
+
 - Server unreachable
 - DNS resolution failed
 - Connection refused
@@ -232,6 +236,7 @@ except MissingDependencyError as e:
 ```
 
 **Attributes:**
+
 - `dependency: str` - Name of the missing package
 - `feature: str` - Feature that requires the dependency
 
@@ -251,7 +256,7 @@ except ReplaneError as e:
 ## Best Practices
 
 1. **Catch specific exceptions first**, then fall back to `ReplaneError`
-2. **Use fallbacks** for resilience against missing configs
+2. **Use defaults** for resilience against missing configs
 3. **Log errors** with their codes for debugging
 4. **Don't catch and ignore** - at minimum, log the error
 5. **Use `default` parameter** instead of catching `ConfigNotFoundError` when appropriate

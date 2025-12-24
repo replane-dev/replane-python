@@ -366,4 +366,4 @@ if __name__ == "__main__":
 2. **Close on shutdown** - Always close the client when your application shuts down
 3. **Use context managers** - When possible, use `with`/`async with` for automatic cleanup
 4. **Handle errors** - Wrap initialization in try/except for graceful degradation
-5. **Use fallbacks** - Configure fallback values for resilience
+5. **Use defaults** - Configure default values for resilience

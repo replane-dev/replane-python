@@ -16,7 +16,7 @@ replane = Replane(
 
     # Optional
     context={"environment": "production"},
-    fallbacks={"rate-limit": 100, "feature-enabled": False},
+    defaults={"rate-limit": 100, "feature-enabled": False},
     required=["rate-limit", "feature-enabled"],
     request_timeout_ms=2000,
     initialization_timeout_ms=5000,
@@ -29,6 +29,7 @@ replane = Replane(
 ### Required Options
 
 #### `base_url`
+
 - **Type:** `str`
 - **Required:** Yes
 
@@ -40,6 +41,7 @@ base_url="http://localhost:3000"  # Local development
 ```
 
 #### `sdk_key`
+
 - **Type:** `str`
 - **Required:** Yes
 
@@ -53,6 +55,7 @@ sdk_key="rp_test_xyz789..."  # Testing/staging
 ### Optional Options
 
 #### `context`
+
 - **Type:** `dict[str, str | int | float | bool | None]`
 - **Default:** `{}`
 
@@ -76,16 +79,17 @@ value = replane.get("config-name", context={"user_id": "123"})
 # Effective context: {"environment": "production", "region": "us-east", "user_id": "123"}
 ```
 
-#### `fallbacks`
+#### `defaults`
+
 - **Type:** `dict[str, Any]`
 - **Default:** `{}`
 
-Fallback values used when configs can't be loaded from the server. This is useful for resilience - your application can still function with sensible defaults if the Replane server is unavailable.
+Default values used when configs can't be loaded from the server. This is useful for resilience - your application can still function with sensible defaults if the Replane server is unavailable.
 
 ```python
 replane = Replane(
     ...,
-    fallbacks={
+    defaults={
         "rate-limit": 100,
         "feature-enabled": False,
         "max-connections": 10,
@@ -93,11 +97,13 @@ replane = Replane(
 )
 ```
 
-Fallbacks are used in two scenarios:
+Defaults are used in two scenarios:
+
 1. During initialization if a config isn't returned by the server
 2. If `get()` is called before initialization completes
 
 #### `required`
+
 - **Type:** `list[str]`
 - **Default:** `[]`
 
@@ -114,6 +120,7 @@ replane = Replane(
 This is useful for catching configuration errors early rather than at runtime.
 
 #### `request_timeout_ms`
+
 - **Type:** `int`
 - **Default:** `2000` (2 seconds)
 
@@ -127,6 +134,7 @@ replane = Replane(
 ```
 
 #### `initialization_timeout_ms`
+
 - **Type:** `int`
 - **Default:** `5000` (5 seconds)
 
@@ -142,6 +150,7 @@ replane = Replane(
 If initialization times out, a `TimeoutError` is raised.
 
 #### `retry_delay_ms`
+
 - **Type:** `int`
 - **Default:** `200` (0.2 seconds)
 
@@ -155,6 +164,7 @@ replane = Replane(
 ```
 
 #### `inactivity_timeout_ms`
+
 - **Type:** `int`
 - **Default:** `30000` (30 seconds)
 
@@ -168,6 +178,7 @@ replane = Replane(
 ```
 
 #### `debug`
+
 - **Type:** `bool`
 - **Default:** `False`
 
@@ -181,6 +192,7 @@ replane = Replane(
 ```
 
 When enabled, you'll see logs for:
+
 - Client initialization parameters
 - SSE connection attempts and status
 - Each config loaded from the server
@@ -190,6 +202,7 @@ When enabled, you'll see logs for:
 - Client close operations
 
 Example output:
+
 ```
 2024-01-15 10:30:00 [DEBUG] replane: Initializing Replane: base_url=https://replane.example.com, ...
 2024-01-15 10:30:00 [DEBUG] replane: connect() called, wait=True
