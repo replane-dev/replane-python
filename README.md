@@ -95,6 +95,12 @@ client = Replane(
     initialization_timeout_ms=5000,
     retry_delay_ms=200,
     inactivity_timeout_ms=30000,
+
+    # Custom agent identifier for User-Agent header
+    agent="my-app/1.0.0",
+
+    # Enable debug logging
+    debug=True,
 )
 ```
 
