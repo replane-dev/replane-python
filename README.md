@@ -3,7 +3,7 @@
 Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform with real-time updates.
 
 [![PyPI](https://img.shields.io/pypi/v/replane)](https://pypi.org/project/replane/)
-[![CI](https://github.com/replane-dev/replane-python/actions/workflows/ci.yml/badge.svg)](https://github.com/replane-dev/replane-python/actions)
+[![CI](https://github.com/replane-dev/replane-python/actions/workflows/main.yml/badge.svg)](https://github.com/replane-dev/replane-python/actions)
 [![License](https://img.shields.io/github/license/replane-dev/replane-python)](https://github.com/replane-dev/replane-python/blob/main/LICENSE)
 [![Community](https://img.shields.io/badge/discussions-join-blue?logo=github)](https://github.com/orgs/replane-dev/discussions)
 
