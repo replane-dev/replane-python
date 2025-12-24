@@ -99,7 +99,7 @@ class AsyncReplane:
             base_url: Base URL of the Replane server.
             sdk_key: SDK key for authentication.
             context: Default context for override evaluation.
-            defaults: Default values for configs if not loaded or abs from server.
+            defaults: Default values for configs if not loaded from server.
             required: List of config names that must be present on init.
             request_timeout_ms: Timeout for HTTP requests in milliseconds.
             initialization_timeout_ms: Timeout for initial connection.
