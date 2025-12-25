@@ -18,8 +18,8 @@ def main():
         sdk_key=SDK_KEY,
         # Optional: set default context for all evaluations
         context={"environment": "production"},
-        # Optional: fallback values if server is unavailable
-        fallbacks={
+        # Optional: default values if server is unavailable
+        defaults={
             "feature-enabled": False,
             "max-items": 10,
         },
@@ -71,15 +71,15 @@ def example_non_blocking_connect():
     client = Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
-        fallbacks={"my-config": "default-value"},
+        defaults={"my-config": "default-value"},
     )
 
     # Start connection without waiting
     client.connect(wait=False)
 
-    # Can use fallback values immediately
+    # Can use default values immediately
     value = client.get("my-config")
-    print(f"Initial value (may be fallback): {value}")
+    print(f"Initial value (may be default): {value}")
 
     # Later, wait for initialization if needed
     client.wait_for_init()

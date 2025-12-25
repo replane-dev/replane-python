@@ -59,8 +59,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REPLANE_BASE_URL = os.environ.get("REPLANE_BASE_URL", "https://your-replane-server.com")
 REPLANE_SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "your_sdk_key_here")
 
-# Fallback values if Replane server is unavailable
-REPLANE_FALLBACKS = {
+# Default values if Replane server is unavailable
+REPLANE_DEFAULTS = {
     "rate-limit": 100,
     "new-dashboard-enabled": False,
     "max-upload-size-mb": 10,

@@ -221,7 +221,7 @@ For these examples to work fully, configure the following in your Replane dashbo
 
 ## Best Practices
 
-1. **Always provide fallbacks**: Use the `fallbacks` parameter or `default` in `get()` calls
+1. **Always provide defaults**: Use the `defaults` parameter or `default` in `get()` calls
 2. **Use meaningful config names**: `api-rate-limit` not `limit1`
 3. **Document your context properties**: Keep a list of what context values your app uses
 4. **Test with InMemoryReplaneClient**: See the `testing` example for how to test

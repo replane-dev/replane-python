@@ -114,7 +114,7 @@ curl http://localhost:8000/health/
 # Replane Configuration
 REPLANE_BASE_URL = os.environ.get("REPLANE_BASE_URL", "...")
 REPLANE_SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "...")
-REPLANE_FALLBACKS = {
+REPLANE_DEFAULTS = {
     "rate-limit": 100,
     "new-dashboard-enabled": False,
 }
@@ -131,7 +131,7 @@ class DemoConfig(AppConfig):
         init_replane(
             base_url=settings.REPLANE_BASE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
-            fallbacks=settings.REPLANE_FALLBACKS,
+            defaults=settings.REPLANE_DEFAULTS,
         )
 ```
 
@@ -178,7 +178,7 @@ class MyView(View):
 ## Production Considerations
 
 1. **Use environment variables** for `REPLANE_BASE_URL` and `REPLANE_SDK_KEY`
-2. **Set appropriate fallbacks** for all configs your app depends on
+2. **Set appropriate defaults** for all configs your app depends on
 3. **Monitor the health endpoint** to ensure Replane connectivity
 4. **Handle `RuntimeError`** if client initialization fails
 5. **Consider using Django signals** for more complex initialization scenarios

@@ -453,7 +453,7 @@ class Replane:
                 if hasattr(response.fp, "read1"):
                     chunk = response.fp.read1(buffer_size)  # type: ignore[union-attr]
                 else:
-                    # Fallback for environments where read1 isn't available
+                    # Default for environments where read1 isn't available
                     chunk = response.read(buffer_size)
 
                 if not chunk:

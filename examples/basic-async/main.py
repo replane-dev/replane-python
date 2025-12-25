@@ -20,8 +20,8 @@ async def main():
         sdk_key=SDK_KEY,
         # Optional: set default context for all evaluations
         context={"environment": "production"},
-        # Optional: fallback values if server is unavailable
-        fallbacks={
+        # Optional: default values if server is unavailable
+        defaults={
             "feature-enabled": False,
             "max-items": 10,
         },

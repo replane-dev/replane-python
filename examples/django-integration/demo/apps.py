@@ -28,7 +28,7 @@ class DemoConfig(AppConfig):
         init_replane(
             base_url=settings.REPLANE_BASE_URL,
             sdk_key=settings.REPLANE_SDK_KEY,
-            fallbacks=getattr(settings, "REPLANE_FALLBACKS", {}),
+            defaults=getattr(settings, "REPLANE_DEFAULTS", {}),
         )
 
         # Register cleanup on shutdown

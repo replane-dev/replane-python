@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     replane_client = AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
-        fallbacks={
+        defaults={
             "rate-limit": 100,
             "new-dashboard-enabled": False,
             "max-upload-size-mb": 10,

@@ -212,8 +212,8 @@ def main():
     with Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
-        # Fallback values ensure the app works even if server is unreachable
-        fallbacks={
+        # Default values ensure the app works even if server is unreachable
+        defaults={
             "dark-mode-enabled": False,
             "new-checkout-flow": False,
             "beta-feature": False,

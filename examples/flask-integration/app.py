@@ -21,7 +21,7 @@ SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "your_sdk_key_here")
 replane_client = Replane(
     base_url=BASE_URL,
     sdk_key=SDK_KEY,
-    fallbacks={
+    defaults={
         "rate-limit": 100,
         "new-dashboard-enabled": False,
         "max-upload-size-mb": 10,

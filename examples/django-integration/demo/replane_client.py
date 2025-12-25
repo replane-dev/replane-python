@@ -15,7 +15,7 @@ _client: Replane | None = None
 def init_replane(
     base_url: str,
     sdk_key: str,
-    fallbacks: dict[str, Any] | None = None,
+    defaults: dict[str, Any] | None = None,
 ) -> Replane:
     """Initialize the global Replane client.
 
@@ -24,7 +24,7 @@ def init_replane(
     Args:
         base_url: Replane server URL.
         sdk_key: SDK key for authentication.
-        fallbacks: Fallback values if server is unavailable.
+        defaults: Default values if server is unavailable.
 
     Returns:
         The initialized client.
@@ -37,7 +37,7 @@ def init_replane(
     _client = Replane(
         base_url=base_url,
         sdk_key=sdk_key,
-        fallbacks=fallbacks or {},
+        defaults=defaults or {},
     )
     _client.connect()
 
