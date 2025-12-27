@@ -7,6 +7,8 @@ Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform
 [![License](https://img.shields.io/github/license/replane-dev/replane-python)](https://github.com/replane-dev/replane-python/blob/main/LICENSE)
 [![Community](https://img.shields.io/badge/discussions-join-blue?logo=github)](https://github.com/orgs/replane-dev/discussions)
 
+> **Tip:** Get started instantly with [Replane Cloud](https://cloud.replane.dev) — no infrastructure required.
+
 ## Features
 
 - **Real-time updates** via Server-Sent Events (SSE)
@@ -35,7 +37,7 @@ from replane import Replane
 
 # Using context manager (recommended)
 with Replane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",  # or your self-hosted URL
     sdk_key="rp_...",
 ) as client:
     # Get a simple config value
