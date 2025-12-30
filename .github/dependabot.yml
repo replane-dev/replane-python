@@ -1,11 +1,41 @@
+# Dependabot configuration for replane-python (Python SDK)
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
 version: 2
 updates:
-- package-ecosystem: "pip"
-  directory: "/"
-  schedule:
-    interval: "daily"
-  open-pull-requests-limit: 10
-- package-ecosystem: "github-actions"
-  directory: "/"
-  schedule:
-    interval: "daily"
+  # Python dependencies (pip/pyproject.toml)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Group dev dependencies together
+      dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "sphinx*"
+          - "furo"
+          - "myst-parser"
+      # Group minor and patch updates together
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
