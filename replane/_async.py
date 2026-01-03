@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from typing import Any, Awaitable, Callable, TypeVar
 
 from ._eval import evaluate_config
@@ -24,6 +25,11 @@ from .errors import (
 )
 from .types import Config, ContextValue, parse_config
 from .version import VERSION
+
+#: The context key for the auto-generated client ID.
+#: This key is automatically set by the SDK and can be used for segmentation.
+#: User-provided values for this key take precedence over the auto-generated value.
+REPLANE_CLIENT_ID_KEY = "replaneClientId"
 
 try:
     import httpx
@@ -137,7 +143,12 @@ class AsyncReplane:
 
         self._base_url = base_url.rstrip("/")
         self._sdk_key = sdk_key
-        self._context = context or {}
+        # Generate replaneClientId and set it as base context.
+        # User-provided context values take precedence (merged on top).
+        auto_generated_context: dict[str, ContextValue] = {
+            REPLANE_CLIENT_ID_KEY: str(uuid.uuid4()),
+        }
+        self._context = {**auto_generated_context, **(context or {})}
         self._defaults = defaults or {}
         self._required = set(required or [])
         self._request_timeout = request_timeout_ms / 1000.0

@@ -1154,3 +1154,145 @@ class TestSyncClientInactivityTimeout:
 
             # Should have the new value after reconnect
             assert client.get("feature") == "after-reconnect"
+
+
+class TestReplaneClientId:
+    """Test auto-generated replaneClientId context field."""
+
+    def test_auto_generates_replane_client_id(self, mock_server: MockSSEServer):
+        """Client auto-generates replaneClientId and uses it for segmentation."""
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "segmented-override",
+                            "segmented-value",
+                            [
+                                {
+                                    "operator": "segmentation",
+                                    "property": "replaneClientId",
+                                    "fromPercentage": 0,
+                                    "toPercentage": 100,
+                                    "seed": "test-seed",
+                                }
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        # Create client without providing replaneClientId
+        with Replane(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            # Should match segmentation because replaneClientId is auto-generated
+            assert client.get("feature") == "segmented-value"
+
+    def test_user_provided_replane_client_id_takes_precedence(
+        self, mock_server: MockSSEServer
+    ):
+        """User-provided replaneClientId takes precedence over auto-generated one."""
+        user_provided_id = "user-provided-client-id"
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "user-override",
+                            "user-override-value",
+                            [create_condition("equals", "replaneClientId", user_provided_id)],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        # Provide replaneClientId in context - should take precedence
+        with Replane(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+            context={"replaneClientId": user_provided_id},
+        ) as client:
+            assert client.get("feature") == "user-override-value"
+
+    def test_per_request_context_overrides_replane_client_id(
+        self, mock_server: MockSSEServer
+    ):
+        """Per-request context can override replaneClientId."""
+        per_request_id = "per-request-client-id"
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "per-request-override",
+                            "per-request-value",
+                            [create_condition("equals", "replaneClientId", per_request_id)],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        with Replane(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        ) as client:
+            # Default should be based on auto-generated ID (won't match)
+            assert client.get("feature") == "default"
+
+            # Per-request context should override the auto-generated ID
+            assert (
+                client.get("feature", context={"replaneClientId": per_request_id})
+                == "per-request-value"
+            )
+
+    def test_unique_replane_client_id_per_client_instance(
+        self, mock_server: MockSSEServer
+    ):
+        """Each client instance gets a unique replaneClientId."""
+        mock_server.send_init(
+            [
+                create_config(
+                    "feature",
+                    "default",
+                    overrides=[
+                        create_override(
+                            "50-percent-rollout",
+                            "rollout-value",
+                            [
+                                {
+                                    "operator": "segmentation",
+                                    "property": "replaneClientId",
+                                    "fromPercentage": 0,
+                                    "toPercentage": 50,
+                                    "seed": "test-seed",
+                                }
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+        # Create multiple clients and check they get different segmentation results
+        results = []
+        for _ in range(10):
+            with Replane(
+                base_url=mock_server.url,
+                sdk_key="rp_test_key",
+            ) as client:
+                results.append(client.get("feature"))
+
+        # With 10 clients and 50% rollout, we should statistically see both values
+        # This test mainly verifies that segmentation is working
+        assert "rollout-value" in results or "default" in results

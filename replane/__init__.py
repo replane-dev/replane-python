@@ -31,7 +31,7 @@ For testing:
     ... })
 """
 
-from ._sync import Replane
+from ._sync import REPLANE_CLIENT_ID_KEY, Replane
 from .errors import (
     AuthenticationError,
     ClientClosedError,
