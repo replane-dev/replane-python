@@ -289,18 +289,24 @@ class Replane(Generic[ConfigsT]):
     Replane's codegen feature. When provided, it enables better type inference
     for config values accessed via the ``configs`` property.
 
-    Example:
-        >>> client = Replane(
+    Example with context manager (recommended):
+        >>> with Replane(
         ...     base_url="https://replane.example.com",
         ...     sdk_key="rp_...",
-        ... )
-        >>> client.connect()
-        >>> value = client.get("feature-flag")
-        >>> client.close()
-
-    For simpler usage, prefer the context manager:
-        >>> with Replane(...) as replane:
+        ... ) as replane:
         ...     value = replane.configs["feature-flag"]
+
+    Without context manager (credentials in constructor):
+        >>> replane = Replane(base_url="...", sdk_key="...")
+        >>> replane.connect()
+        >>> value = replane.configs["feature-flag"]
+        >>> replane.close()
+
+    Without context manager (credentials in connect):
+        >>> replane = Replane()
+        >>> replane.connect(base_url="...", sdk_key="...")
+        >>> value = replane.configs["feature-flag"]
+        >>> replane.close()
 
     With generated types for better type safety (recommended):
         >>> from replane_types import Configs

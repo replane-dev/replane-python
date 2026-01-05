@@ -287,16 +287,22 @@ class AsyncReplane(Generic[ConfigsT]):
     Replane's codegen feature. When provided, it enables better type inference
     for config values accessed via the ``configs`` property.
 
-    Example:
+    Example with context manager (recommended):
         >>> async with AsyncReplane(
         ...     base_url="https://replane.example.com",
         ...     sdk_key="rp_...",
         ... ) as replane:
         ...     value = replane.configs["feature-flag"]
 
-    Or with manual lifecycle:
-        >>> replane = AsyncReplane(...)
+    Without context manager (credentials in constructor):
+        >>> replane = AsyncReplane(base_url="...", sdk_key="...")
         >>> await replane.connect()
+        >>> value = replane.configs["feature-flag"]
+        >>> await replane.close()
+
+    Without context manager (credentials in connect):
+        >>> replane = AsyncReplane()
+        >>> await replane.connect(base_url="...", sdk_key="...")
         >>> value = replane.configs["feature-flag"]
         >>> await replane.close()
 
