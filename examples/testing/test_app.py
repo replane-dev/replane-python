@@ -133,9 +133,17 @@ class TestWithOverrides:
         )
 
         # Both conditions must match
-        assert replane.with_context({"plan": "premium", "region": "US"}).configs["special-offer"] is True
-        assert replane.with_context({"plan": "premium", "region": "EU"}).configs["special-offer"] is False
-        assert replane.with_context({"plan": "free", "region": "US"}).configs["special-offer"] is False
+        assert (
+            replane.with_context({"plan": "premium", "region": "US"}).configs["special-offer"]
+            is True
+        )
+        assert (
+            replane.with_context({"plan": "premium", "region": "EU"}).configs["special-offer"]
+            is False
+        )
+        assert (
+            replane.with_context({"plan": "free", "region": "US"}).configs["special-offer"] is False
+        )
 
 
 class TestApplicationCode:
