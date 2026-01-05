@@ -69,6 +69,24 @@ rate_limit = replane.configs["rate-limit"]
 await replane.close()
 ```
 
+### Type-safe with Generated Types
+
+Generate TypedDict types from the Replane dashboard for full type safety:
+
+```python
+from replane import Replane
+from replane_types import Configs  # Generated from dashboard
+
+with Replane[Configs](
+    base_url="https://replane.example.com",
+    sdk_key="rp_...",
+) as replane:
+    # Dictionary-style access with full type safety
+    settings = replane.configs["app-settings"]
+    print(settings["maxUploadSizeMb"])  # IDE knows the type
+    print(settings["allowedFileTypes"])  # Autocomplete works
+```
+
 ```{toctree}
 :maxdepth: 2
 :hidden:
