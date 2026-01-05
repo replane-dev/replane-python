@@ -64,6 +64,27 @@ asyncio.run(main())
 The async client requires the `async` extra: `pip install replane[async]`
 ```
 
+### Without Context Manager
+
+If you prefer manual lifecycle management:
+
+```python
+from replane import Replane
+
+replane = Replane(
+    base_url="https://replane.example.com",
+    sdk_key="rp_...",
+)
+replane.connect()
+
+try:
+    rate_limit = replane.configs["rate-limit"]
+    user_client = replane.with_context({"user_id": "123"})
+    feature = user_client.configs["feature-flag"]
+finally:
+    replane.close()
+```
+
 ## Understanding Config Values
 
 Configs in Replane can be any JSON-serializable value:

@@ -16,6 +16,7 @@ Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform
 ```python
 from replane import Replane
 
+# Using context manager (recommended)
 with Replane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
@@ -26,6 +27,17 @@ with Replane(
     # Get with context for override evaluation
     user_client = replane.with_context({"user_id": user.id, "plan": user.plan})
     feature_enabled = user_client.configs["new-feature"]
+```
+
+Or without context manager:
+
+```python
+replane = Replane(base_url="...", sdk_key="...")
+replane.connect()
+
+rate_limit = replane.configs["rate-limit"]
+
+replane.close()
 ```
 
 ```{toctree}
