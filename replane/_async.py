@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Any, Awaitable, Callable, Generic, TypeVar
 
 from ._eval import evaluate_config
 from ._sse import SSEParser
@@ -38,8 +38,221 @@ except ImportError:
 
 T = TypeVar("T")
 
+#: Type variable for the optional Configs TypedDict type parameter.
+#: When provided, enables better type inference for config values.
+ConfigsT = TypeVar("ConfigsT")
+
 # Sentinel value for detecting when no default was provided
 _MISSING: Any = object()
+
+
+class AsyncConfigAccessor(Generic[ConfigsT]):
+    """Dictionary-like accessor for configuration values (async client).
+
+    Provides bracket notation access to configs with override evaluation.
+    The type parameter ``ConfigsT`` should be a TypedDict for full type safety.
+
+    Note: Despite being for the async client, this accessor is synchronous
+    since it only reads from the local cache without any I/O.
+
+    Example:
+        >>> config_value = client.configs["my-feature-flag"]
+        >>> print(config_value["enabled"])  # Access typed properties
+    """
+
+    def __init__(
+        self,
+        configs: dict[str, Config],
+        context: dict[str, ContextValue],
+        closed_check: Callable[[], bool],
+        defaults: dict[str, Any] | None = None,
+    ) -> None:
+        self._configs = configs
+        self._context = context
+        self._closed_check = closed_check
+        self._defaults = defaults or {}
+
+    def __getitem__(self, name: str) -> Any:
+        """Get a config value by name with override evaluation.
+
+        Args:
+            name: The config name to retrieve.
+
+        Returns:
+            The config value with overrides applied.
+
+        Raises:
+            KeyError: If the config doesn't exist and no scoped default is set.
+            ClientClosedError: If the client has been closed.
+        """
+        if self._closed_check():
+            raise ClientClosedError()
+
+        logger.debug("configs[%r] with context: %s", name, self._context or "(none)")
+
+        if name not in self._configs:
+            # Check scoped defaults
+            if name in self._defaults:
+                logger.debug(
+                    "Config %r not found, using scoped default: %r", name, self._defaults[name]
+                )
+                return self._defaults[name]
+            logger.debug("Config %r not found", name)
+            raise KeyError(name)
+
+        config = self._configs[name]
+        result = evaluate_config(config, self._context)
+        logger.debug(
+            "Config %r: base_value=%r, overrides=%d, result=%r",
+            name,
+            config.value,
+            len(config.overrides),
+            result,
+        )
+        return result
+
+    def __contains__(self, name: str) -> bool:
+        """Check if a config exists (including scoped defaults).
+
+        Args:
+            name: The config name to check.
+
+        Returns:
+            True if the config exists or has a scoped default, False otherwise.
+        """
+        return name in self._configs or name in self._defaults
+
+    def get(self, name: str, default: T = _MISSING) -> Any:  # type: ignore[assignment]
+        """Get a config value with an optional default.
+
+        If an explicit default is provided, it takes precedence over scoped defaults.
+
+        Args:
+            name: The config name to retrieve.
+            default: Value to return if config doesn't exist (overrides scoped defaults).
+
+        Returns:
+            The config value or default.
+        """
+        if self._closed_check():
+            raise ClientClosedError()
+
+        # Check actual configs first
+        if name in self._configs:
+            config = self._configs[name]
+            return evaluate_config(config, self._context)
+
+        # If explicit default provided, use it (takes precedence over scoped defaults)
+        if default is not _MISSING:
+            return default
+
+        # Fall back to scoped defaults
+        if name in self._defaults:
+            return self._defaults[name]
+
+        # No default - return None (standard dict.get behavior)
+        return None
+
+    def keys(self) -> list[str]:
+        """Return all config names (including scoped defaults)."""
+        all_keys = set(self._configs.keys()) | set(self._defaults.keys())
+        return list(all_keys)
+
+
+class ContextualAsyncReplane(Generic[ConfigsT]):
+    """A wrapper around AsyncReplane that provides scoped context and defaults.
+
+    This class is returned by ``AsyncReplane.with_context()`` or
+    ``AsyncReplane.with_defaults()`` and provides the same interface as
+    ``AsyncReplane``, but with merged context/defaults.
+
+    Example:
+        >>> async with AsyncReplane(...) as client:
+        ...     # Create a scoped client for a specific user
+        ...     user_client = client.with_context({"user_id": "123", "plan": "premium"})
+        ...     rate_limit = user_client.configs["rate-limit"]  # Uses merged context
+        ...
+        ...     # Create a scoped client with additional defaults
+        ...     safe_client = client.with_defaults({"timeout": 30})
+        ...     timeout = safe_client.configs["timeout"]  # Returns 30 if not configured
+    """
+
+    def __init__(
+        self,
+        client: AsyncReplane[ConfigsT],
+        context: dict[str, ContextValue],
+        defaults: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialize the contextual wrapper.
+
+        Args:
+            client: The underlying AsyncReplane client.
+            context: The merged context for this wrapper.
+            defaults: Additional defaults for this wrapper.
+        """
+        self._client = client
+        self._context = context
+        self._defaults = defaults or {}
+
+    @property
+    def configs(self) -> ConfigsT:
+        """Dictionary-like accessor using the scoped context and defaults."""
+        return AsyncConfigAccessor(  # type: ignore[return-value]
+            configs=self._client._configs,
+            context=self._context,
+            closed_check=lambda: self._client._closed,
+            defaults=self._defaults,
+        )
+
+    def with_context(
+        self,
+        context: dict[str, ContextValue],
+    ) -> ContextualAsyncReplane[ConfigsT]:
+        """Create a new contextual wrapper with additional context.
+
+        Args:
+            context: Additional context to merge.
+
+        Returns:
+            A new ContextualAsyncReplane with the merged context.
+        """
+        merged_context = {**self._context, **context}
+        return ContextualAsyncReplane(self._client, merged_context, self._defaults)
+
+    def with_defaults(
+        self,
+        defaults: dict[str, Any],
+    ) -> ContextualAsyncReplane[ConfigsT]:
+        """Create a new contextual wrapper with additional defaults.
+
+        Args:
+            defaults: Additional defaults to merge.
+
+        Returns:
+            A new ContextualAsyncReplane with the merged defaults.
+        """
+        merged_defaults = {**self._defaults, **defaults}
+        return ContextualAsyncReplane(self._client, self._context, merged_defaults)
+
+    def subscribe(
+        self,
+        callback: Callable[[str, Config], None | Awaitable[None]],
+    ) -> Callable[[], None]:
+        """Subscribe to all config changes (delegates to underlying client)."""
+        return self._client.subscribe(callback)
+
+    def subscribe_config(
+        self,
+        name: str,
+        callback: Callable[[Config], None | Awaitable[None]],
+    ) -> Callable[[], None]:
+        """Subscribe to changes for a specific config (delegates to underlying client)."""
+        return self._client.subscribe_config(name, callback)
+
+    def is_initialized(self) -> bool:
+        """Check if the underlying client has finished initialization."""
+        return self._client.is_initialized()
+
 
 # Default agent identifier
 DEFAULT_AGENT = f"replane-python/{VERSION}"
@@ -62,13 +275,17 @@ def _setup_debug_logging() -> None:
         logger.addHandler(handler)
 
 
-class AsyncReplane:
+class AsyncReplane(Generic[ConfigsT]):
     """Asynchronous Replane client with background SSE streaming.
 
     This client maintains a persistent SSE connection to receive real-time
     config updates. All operations are async and non-blocking.
 
     Requires httpx: pip install replane[async]
+
+    The optional type parameter ``ConfigsT`` can be a TypedDict generated by
+    Replane's codegen feature. When provided, it enables better type inference
+    for config values accessed via the ``configs`` property.
 
     Example:
         >>> async with AsyncReplane(
@@ -82,6 +299,12 @@ class AsyncReplane:
         >>> await client.connect()
         >>> value = client.get("feature-flag")
         >>> await client.close()
+
+    With generated types for better type safety (recommended):
+        >>> from replane_types import Configs
+        >>> async with AsyncReplane[Configs](...) as client:
+        ...     config = client.configs["feature-flag"]  # fully typed
+        ...     print(config["enabled"])  # type-safe property access
     """
 
     def __init__(
@@ -228,57 +451,6 @@ class AsyncReplane:
         if self._init_error:
             raise self._init_error
 
-    def get(
-        self,
-        name: str,
-        *,
-        context: dict[str, ContextValue] | None = None,
-        default: T = _MISSING,
-    ) -> Any:
-        """Get a config value.
-
-        This is a synchronous read from the local cache. Override evaluation
-        happens locally using the provided context.
-
-        Note: This method is intentionally sync since it only reads from
-        the local cache and doesn't perform any I/O.
-
-        Args:
-            name: Config name to retrieve.
-            context: Context for override evaluation (merged with default).
-            default: Default value if config doesn't exist (can be None).
-
-        Returns:
-            The config value with overrides applied.
-
-        Raises:
-            ConfigNotFoundError: If config doesn't exist and no default provided.
-            ClientClosedError: If the client has been closed.
-        """
-        if self._closed:
-            raise ClientClosedError()
-
-        merged_context = {**self._context, **(context or {})}
-        logger.debug("get(%r) with context: %s", name, merged_context or "(none)")
-
-        if name not in self._configs:
-            if default is not _MISSING:
-                logger.debug("Config %r not found, returning default: %r", name, default)
-                return default
-            logger.debug("Config %r not found, no default provided", name)
-            raise ConfigNotFoundError(name)
-
-        config = self._configs[name]
-        result = evaluate_config(config, merged_context)
-        logger.debug(
-            "Config %r: base_value=%r, overrides=%d, result=%r",
-            name,
-            config.value,
-            len(config.overrides),
-            result,
-        )
-        return result
-
     def subscribe(
         self,
         callback: Callable[[str, Config], None | Awaitable[None]],
@@ -336,6 +508,89 @@ class AsyncReplane:
         """
         return self._initialized.is_set()
 
+    @property
+    def configs(self) -> ConfigsT:
+        """Dictionary-like accessor for configuration values.
+
+        Provides bracket notation access to configs with override evaluation.
+        When using generated TypedDict types, provides full type safety.
+
+        Note: Despite being on the async client, this accessor is synchronous
+        since it only reads from the local cache without any I/O.
+
+        Example:
+            >>> config = client.configs["my-feature-flag"]
+            >>> print(config["enabled"])
+
+        Returns:
+            An AsyncConfigAccessor that behaves like a typed dictionary.
+        """
+        return AsyncConfigAccessor(  # type: ignore[return-value]
+            configs=self._configs,
+            context=self._context,
+            closed_check=lambda: self._closed,
+        )
+
+    def with_context(
+        self,
+        context: dict[str, ContextValue],
+    ) -> ContextualAsyncReplane[ConfigsT]:
+        """Create a contextual wrapper with additional context.
+
+        Returns a new object that wraps this client and uses the merged context
+        for all operations. The original client is unaffected.
+
+        This is useful for creating scoped clients for specific users or requests:
+
+        Example:
+            >>> async with AsyncReplane(...) as client:
+            ...     # Create a scoped client for a specific user
+            ...     user_client = client.with_context({
+            ...         "user_id": user.id,
+            ...         "plan": user.plan,
+            ...     })
+            ...     # All operations use the merged context
+            ...     rate_limit = user_client.get("rate-limit")
+            ...     settings = user_client.configs["app-settings"]
+
+        Args:
+            context: Additional context to merge with the client's default context.
+
+        Returns:
+            A ContextualAsyncReplane wrapper with the merged context.
+        """
+        merged_context = {**self._context, **context}
+        return ContextualAsyncReplane(self, merged_context, None)
+
+    def with_defaults(
+        self,
+        defaults: dict[str, Any],
+    ) -> ContextualAsyncReplane[ConfigsT]:
+        """Create a contextual wrapper with additional defaults.
+
+        Returns a new object that wraps this client and uses the merged defaults
+        for all operations. The original client is unaffected.
+
+        This is useful for providing fallback values for specific use cases:
+
+        Example:
+            >>> async with AsyncReplane(...) as client:
+            ...     # Create a scoped client with additional defaults
+            ...     safe_client = client.with_defaults({
+            ...         "timeout": 30,
+            ...         "max-retries": 3,
+            ...     })
+            ...     # Returns 30 if "timeout" is not configured
+            ...     timeout = safe_client.get("timeout")
+
+        Args:
+            defaults: Additional defaults to use when configs are not found.
+
+        Returns:
+            A ContextualAsyncReplane wrapper with the additional defaults.
+        """
+        return ContextualAsyncReplane(self, self._context, defaults)
+
     async def close(self) -> None:
         """Close the client and stop the SSE connection."""
         logger.debug("close() called")
@@ -355,7 +610,7 @@ class AsyncReplane:
             await self._http_client.aclose()
             logger.debug("HTTP client closed")
 
-    async def __aenter__(self) -> AsyncReplane:
+    async def __aenter__(self) -> AsyncReplane[ConfigsT]:
         await self.connect()
         return self
 

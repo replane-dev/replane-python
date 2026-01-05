@@ -6,16 +6,132 @@ Replane without requiring a real server connection.
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from ._eval import evaluate_config
-from .errors import ClientClosedError, ConfigNotFoundError
+from .errors import ClientClosedError
 from .types import Config, ContextValue, Override, parse_condition
 
 T = TypeVar("T")
+ConfigsT = TypeVar("ConfigsT")
+
+# Sentinel value for detecting when no default was provided
+_MISSING: Any = object()
 
 
-class InMemoryReplaneClient:
+class InMemoryConfigAccessor(Generic[ConfigsT]):
+    """Config accessor for InMemoryReplaneClient."""
+
+    def __init__(
+        self,
+        configs: dict[str, Config],
+        context: dict[str, ContextValue],
+        closed_check: Callable[[], bool],
+        defaults: dict[str, Any] | None = None,
+    ) -> None:
+        self._configs = configs
+        self._context = context
+        self._closed_check = closed_check
+        self._defaults = defaults or {}
+
+    def __getitem__(self, name: str) -> Any:
+        if self._closed_check():
+            raise ClientClosedError()
+
+        if name not in self._configs:
+            if name in self._defaults:
+                return self._defaults[name]
+            raise KeyError(name)
+
+        config = self._configs[name]
+        return evaluate_config(config, self._context)
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._configs or name in self._defaults
+
+    def get(self, name: str, default: T = _MISSING) -> Any:  # type: ignore[assignment]
+        """Get a config value with an optional default.
+
+        If an explicit default is provided, it takes precedence over scoped defaults.
+        """
+        if self._closed_check():
+            raise ClientClosedError()
+
+        # Check actual configs first
+        if name in self._configs:
+            config = self._configs[name]
+            return evaluate_config(config, self._context)
+
+        # If explicit default provided, use it (takes precedence over scoped defaults)
+        if default is not _MISSING:
+            return default
+
+        # Fall back to scoped defaults
+        if name in self._defaults:
+            return self._defaults[name]
+
+        # No default - return None (standard dict.get behavior)
+        return None
+
+    def keys(self) -> list[str]:
+        all_keys = set(self._configs.keys()) | set(self._defaults.keys())
+        return list(all_keys)
+
+
+class ContextualInMemoryClient(Generic[ConfigsT]):
+    """A wrapper around InMemoryReplaneClient with scoped context/defaults."""
+
+    def __init__(
+        self,
+        client: InMemoryReplaneClient[ConfigsT],
+        context: dict[str, ContextValue],
+        defaults: dict[str, Any] | None = None,
+    ) -> None:
+        self._client = client
+        self._context = context
+        self._defaults = defaults or {}
+
+    @property
+    def configs(self) -> ConfigsT:
+        return InMemoryConfigAccessor(  # type: ignore[return-value]
+            configs=self._client._configs,
+            context=self._context,
+            closed_check=lambda: self._client._closed,
+            defaults=self._defaults,
+        )
+
+    def with_context(
+        self,
+        context: dict[str, ContextValue],
+    ) -> ContextualInMemoryClient[ConfigsT]:
+        merged_context = {**self._context, **context}
+        return ContextualInMemoryClient(self._client, merged_context, self._defaults)
+
+    def with_defaults(
+        self,
+        defaults: dict[str, Any],
+    ) -> ContextualInMemoryClient[ConfigsT]:
+        merged_defaults = {**self._defaults, **defaults}
+        return ContextualInMemoryClient(self._client, self._context, merged_defaults)
+
+    def subscribe(
+        self,
+        callback: Callable[[str, Config], None],
+    ) -> Callable[[], None]:
+        return self._client.subscribe(callback)
+
+    def subscribe_config(
+        self,
+        name: str,
+        callback: Callable[[Config], None],
+    ) -> Callable[[], None]:
+        return self._client.subscribe_config(name, callback)
+
+    def is_initialized(self) -> bool:
+        return self._client.is_initialized()
+
+
+class InMemoryReplaneClient(Generic[ConfigsT]):
     """An in-memory Replane client for testing.
 
     This client provides the same interface as Replane but stores
@@ -27,8 +143,8 @@ class InMemoryReplaneClient:
         ...     "feature-enabled": True,
         ...     "rate-limit": 100,
         ... })
-        >>> assert client.get("feature-enabled") is True
-        >>> assert client.get("rate-limit") == 100
+        >>> assert client.configs["feature-enabled"] is True
+        >>> assert client.configs["rate-limit"] == 100
 
     With overrides:
         >>> client = InMemoryReplaneClient()
@@ -41,8 +157,8 @@ class InMemoryReplaneClient:
         ...         "value": True,
         ...     }],
         ... )
-        >>> assert client.get("feature", context={"plan": "free"}) is False
-        >>> assert client.get("feature", context={"plan": "beta"}) is True
+        >>> assert client.with_context({"plan": "free"}).configs["feature"] is False
+        >>> assert client.with_context({"plan": "beta"}).configs["feature"] is True
     """
 
     def __init__(
@@ -70,39 +186,29 @@ class InMemoryReplaneClient:
             for name, value in initial_configs.items():
                 self._configs[name] = Config(name=name, value=value)
 
-    def get(
+    @property
+    def configs(self) -> ConfigsT:
+        """Dictionary-like accessor for configs."""
+        return InMemoryConfigAccessor(  # type: ignore[return-value]
+            configs=self._configs,
+            context=self._context,
+            closed_check=lambda: self._closed,
+        )
+
+    def with_context(
         self,
-        name: str,
-        *,
-        context: dict[str, ContextValue] | None = None,
-        default: T | None = None,
-    ) -> Any:
-        """Get a config value.
+        context: dict[str, ContextValue],
+    ) -> ContextualInMemoryClient[ConfigsT]:
+        """Create a scoped client with additional context."""
+        merged_context = {**self._context, **context}
+        return ContextualInMemoryClient(self, merged_context, None)
 
-        Args:
-            name: Config name to retrieve.
-            context: Context for override evaluation (merged with default).
-            default: Default value if config doesn't exist.
-
-        Returns:
-            The config value with overrides applied.
-
-        Raises:
-            ConfigNotFoundError: If config doesn't exist and no default provided.
-            ClientClosedError: If the client has been closed.
-        """
-        if self._closed:
-            raise ClientClosedError()
-
-        merged_context = {**self._context, **(context or {})}
-
-        if name not in self._configs:
-            if default is not None:
-                return default
-            raise ConfigNotFoundError(name)
-
-        config = self._configs[name]
-        return evaluate_config(config, merged_context)
+    def with_defaults(
+        self,
+        defaults: dict[str, Any],
+    ) -> ContextualInMemoryClient[ConfigsT]:
+        """Create a scoped client with additional defaults."""
+        return ContextualInMemoryClient(self, self._context, defaults)
 
     def set(self, name: str, value: Any) -> None:
         """Set a config value (simple form without overrides).
@@ -248,17 +354,11 @@ class InMemoryReplaneClient:
         """
         return True
 
-    def __enter__(self) -> InMemoryReplaneClient:
+    def __enter__(self) -> InMemoryReplaneClient[ConfigsT]:
         return self
 
     def __exit__(self, *args: Any) -> None:
         self.close()
-
-    @property
-    def configs(self) -> dict[str, Config]:
-        """Access to internal configs for testing inspection."""
-        return self._configs.copy()
-
 
 def create_test_client(
     configs: dict[str, Any] | None = None,

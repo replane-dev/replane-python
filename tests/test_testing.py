@@ -2,7 +2,7 @@
 
 import pytest
 
-from replane.errors import ClientClosedError, ConfigNotFoundError
+from replane.errors import ClientClosedError
 from replane.testing import InMemoryReplaneClient, create_test_client
 
 
@@ -11,32 +11,32 @@ class TestInMemoryReplaneClient:
 
     def test_get_simple_config(self):
         client = InMemoryReplaneClient({"feature": True})
-        assert client.get("feature") is True
+        assert client.configs["feature"] is True
 
     def test_get_missing_config_raises(self):
         client = InMemoryReplaneClient()
-        with pytest.raises(ConfigNotFoundError):
-            client.get("missing")
+        with pytest.raises(KeyError):
+            client.configs["missing"]
 
     def test_get_missing_with_default(self):
         client = InMemoryReplaneClient()
-        assert client.get("missing", default="fallback") == "fallback"
+        assert client.configs.get("missing", "fallback") == "fallback"
 
     def test_set_and_get(self):
         client = InMemoryReplaneClient()
         client.set("rate-limit", 100)
-        assert client.get("rate-limit") == 100
+        assert client.configs["rate-limit"] == 100
 
     def test_set_overwrites(self):
         client = InMemoryReplaneClient({"value": 1})
         client.set("value", 2)
-        assert client.get("value") == 2
+        assert client.configs["value"] == 2
 
     def test_delete_config(self):
         client = InMemoryReplaneClient({"feature": True})
         assert client.delete("feature") is True
-        with pytest.raises(ConfigNotFoundError):
-            client.get("feature")
+        with pytest.raises(KeyError):
+            client.configs["feature"]
 
     def test_delete_nonexistent_returns_false(self):
         client = InMemoryReplaneClient()
@@ -56,7 +56,7 @@ class TestInMemoryReplaneClient:
             ],
         )
         # Uses default context
-        assert client.get("feature") is True
+        assert client.configs["feature"] is True
 
     def test_get_context_override(self):
         client = InMemoryReplaneClient(context={"env": "prod"})
@@ -72,7 +72,7 @@ class TestInMemoryReplaneClient:
             ],
         )
         # Override default context
-        assert client.get("feature", context={"env": "test"}) is True
+        assert client.with_context({"env": "test"}).configs["feature"] is True
 
     def test_subscribe_all(self):
         client = InMemoryReplaneClient()
@@ -117,22 +117,22 @@ class TestInMemoryReplaneClient:
 
     def test_context_manager(self):
         with InMemoryReplaneClient({"test": "value"}) as client:
-            assert client.get("test") == "value"
+            assert client.configs["test"] == "value"
         # Should be closed now
         with pytest.raises(ClientClosedError):
-            client.get("test")
+            client.configs["test"]
 
     def test_close_prevents_operations(self):
         client = InMemoryReplaneClient()
         client.close()
         with pytest.raises(ClientClosedError):
-            client.get("anything")
+            client.configs["anything"]
 
     def test_configs_property(self):
         client = InMemoryReplaneClient({"a": 1, "b": 2})
         configs = client.configs
-        assert len(configs) == 2
-        assert configs["a"].value == 1
+        assert len(configs.keys()) == 2
+        assert configs["a"] == 1
 
 
 class TestSetConfigWithOverrides:
@@ -154,8 +154,8 @@ class TestSetConfigWithOverrides:
             ],
         )
 
-        assert client.get("feature", context={"plan": "free"}) is False
-        assert client.get("feature", context={"plan": "premium"}) is True
+        assert client.with_context({"plan": "free"}).configs["feature"] is False
+        assert client.with_context({"plan": "premium"}).configs["feature"] is True
 
     def test_multiple_conditions(self):
         client = InMemoryReplaneClient()
@@ -174,9 +174,9 @@ class TestSetConfigWithOverrides:
             ],
         )
 
-        assert client.get("rate-limit", context={"plan": "free", "region": "us"}) == 100
-        assert client.get("rate-limit", context={"plan": "premium", "region": "eu"}) == 100
-        assert client.get("rate-limit", context={"plan": "premium", "region": "us"}) == 10000
+        assert client.with_context({"plan": "free", "region": "us"}).configs["rate-limit"] == 100
+        assert client.with_context({"plan": "premium", "region": "eu"}).configs["rate-limit"] == 100
+        assert client.with_context({"plan": "premium", "region": "us"}).configs["rate-limit"] == 10000
 
     def test_multiple_overrides_first_wins(self):
         client = InMemoryReplaneClient()
@@ -205,10 +205,10 @@ class TestSetConfigWithOverrides:
             ],
         )
 
-        assert client.get("tier", context={"plan": "free"}) == "free"
-        assert client.get("tier", context={"plan": "premium"}) == "premium"
+        assert client.with_context({"plan": "free"}).configs["tier"] == "free"
+        assert client.with_context({"plan": "premium"}).configs["tier"] == "premium"
         # Enterprise matches first override, so "enterprise" not "premium"
-        assert client.get("tier", context={"plan": "enterprise"}) == "enterprise"
+        assert client.with_context({"plan": "enterprise"}).configs["tier"] == "enterprise"
 
     def test_in_operator(self):
         client = InMemoryReplaneClient()
@@ -226,9 +226,9 @@ class TestSetConfigWithOverrides:
             ],
         )
 
-        assert client.get("feature", context={"plan": "free"}) is False
-        assert client.get("feature", context={"plan": "pro"}) is True
-        assert client.get("feature", context={"plan": "enterprise"}) is True
+        assert client.with_context({"plan": "free"}).configs["feature"] is False
+        assert client.with_context({"plan": "pro"}).configs["feature"] is True
+        assert client.with_context({"plan": "enterprise"}).configs["feature"] is True
 
 
 class TestCreateTestClient:
@@ -236,12 +236,12 @@ class TestCreateTestClient:
 
     def test_creates_client_with_configs(self):
         client = create_test_client({"key": "value"})
-        assert client.get("key") == "value"
+        assert client.configs["key"] == "value"
 
     def test_creates_empty_client(self):
         client = create_test_client()
-        with pytest.raises(ConfigNotFoundError):
-            client.get("missing")
+        with pytest.raises(KeyError):
+            client.configs["missing"]
 
     def test_with_default_context(self):
         client = create_test_client({"x": 1}, context={"env": "test"})

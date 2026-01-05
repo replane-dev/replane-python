@@ -19,7 +19,7 @@ def mock_server():
             mock_server.send_init([{"name": "feature", "value": True}])
             client = Replane(base_url=mock_server.url, sdk_key="test")
             client.connect()
-            assert client.get("feature") is True
+            assert client.configs["feature"] is True
             client.close()
     """
     server = MockSSEServer(port=0)  # Pick available port

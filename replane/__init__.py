@@ -22,6 +22,17 @@ Quick start (async):
     ... ) as client:
     ...     rate_limit = client.get("rate-limit", context={"plan": user.plan})
 
+With generated TypedDict types for better type safety (recommended):
+    >>> from replane import Replane
+    >>> from replane_types import Configs
+    >>>
+    >>> with Replane[Configs](
+    ...     base_url="https://replane.example.com",
+    ...     sdk_key="rp_...",
+    ... ) as client:
+    ...     config = client.configs["my-feature"]  # fully typed dict access
+    ...     print(config["enabled"])  # type-safe property access
+
 For testing:
     >>> from replane.testing import create_test_client
     >>>

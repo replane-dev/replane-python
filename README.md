@@ -15,7 +15,7 @@ Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform
 - **Context-based overrides** for feature flags, A/B testing, and gradual rollouts
 - **Zero dependencies** for sync client (stdlib only)
 - **Both sync and async** clients available
-- **Type-safe** with full type hints
+- **Type-safe** with TypedDict support and full type hints
 - **Testing utilities** with in-memory client
 
 ## Installation
@@ -41,16 +41,14 @@ with Replane(
     sdk_key="rp_...",
 ) as client:
     # Get a simple config value
-    rate_limit = client.get("rate-limit")
+    rate_limit = client.configs["rate-limit"]
 
     # Get with context for override evaluation
-    feature_enabled = client.get(
-        "new-feature",
-        context={"user_id": user.id, "plan": user.plan},
-    )
+    user_client = client.with_context({"user_id": user.id, "plan": user.plan})
+    feature_enabled = user_client.configs["new-feature"]
 
     # Get with fallback default
-    timeout = client.get("request-timeout", default=30)
+    timeout = client.configs.get("request-timeout", 30)
 ```
 
 ### Asynchronous Client
@@ -64,12 +62,47 @@ async with AsyncReplane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as client:
-    # get() is sync since it reads from local cache
-    rate_limit = client.get("rate-limit")
+    # Access configs from local cache
+    rate_limit = client.configs["rate-limit"]
 
     # With context
-    enabled = client.get("feature", context={"plan": "premium"})
+    enabled = client.with_context({"plan": "premium"}).configs["feature"]
 ```
+
+### Type-Safe with Generated Types (Recommended)
+
+Generate TypedDict types from your Replane dashboard for full type safety:
+
+```python
+from replane import Replane
+from replane_types import Configs  # Generated from Replane dashboard
+
+# Use the Configs TypedDict as a type parameter
+with Replane[Configs](
+    base_url="https://cloud.replane.dev",
+    sdk_key="rp_...",
+) as client:
+    # Access configs with dictionary-style notation
+    settings = client.configs["app-settings"]
+
+    # Full type safety - IDE knows the structure of settings
+    print(settings["maxUploadSizeMb"])
+    print(settings["allowedFileTypes"])
+
+    # Check if config exists
+    if "feature-flag" in client.configs:
+        flag = client.configs["feature-flag"]
+
+    # Safe access with default
+    timeout = client.configs.get("timeout", 30)
+```
+
+The `.configs` property provides:
+
+- **Dictionary-style access** with `client.configs["config-name"]`
+- **Type inference** when using generated TypedDict types
+- **Override evaluation** using the default context
+- **Familiar dict methods**: `.get()`, `.keys()`, `in` operator
 
 ## Configuration Options
 
@@ -80,7 +113,7 @@ client = Replane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 
-    # Default context applied to all get() calls
+    # Default context applied to all config evaluations
     context={"environment": "production"},
 
     # Default values used if server is unavailable during init
@@ -119,9 +152,60 @@ context = {
     "is_beta_tester": True,
 }
 
-# Overrides are evaluated locally
-value = client.get("feature-flag", context=context)
+# Overrides are evaluated locally using with_context()
+value = client.with_context(context).configs["feature-flag"]
 ```
+
+### Scoped Clients with `with_context()`
+
+Create scoped clients for specific users or requests using `with_context()`:
+
+```python
+with Replane(
+    base_url="https://cloud.replane.dev",
+    sdk_key="rp_...",
+) as client:
+    # Create a scoped client for a specific user
+    user_client = client.with_context({
+        "user_id": user.id,
+        "plan": user.plan,
+    })
+
+    # All operations use the merged context
+    rate_limit = user_client.configs["rate-limit"]
+    settings = user_client.configs["app-settings"]
+
+    # Can be chained for additional context
+    request_client = user_client.with_context({"region": request.region})
+```
+
+The original client is unaffected - scoped clients are lightweight wrappers.
+
+### Scoped Defaults with `with_defaults()`
+
+Create scoped clients with fallback values using `with_defaults()`:
+
+```python
+with Replane(
+    base_url="https://cloud.replane.dev",
+    sdk_key="rp_...",
+) as client:
+    # Create a client with fallback defaults
+    safe_client = client.with_defaults({
+        "timeout": 30,
+        "max-retries": 3,
+    })
+
+    # Returns the default if config doesn't exist
+    timeout = safe_client.configs["timeout"]  # 30 if not configured
+
+    # Chain with with_context() for both features
+    user_client = client.with_context({"plan": "premium"}).with_defaults({
+        "rate-limit": 1000,
+    })
+```
+
+Explicit defaults in `.configs.get()` take precedence over scoped defaults.
 
 ### Override Examples
 
@@ -130,20 +214,20 @@ value = client.get("feature-flag", context=context)
 ```python
 # Server config has 10% rollout based on user_id
 # Same user always gets same result (deterministic hashing)
-enabled = client.get("new-checkout", context={"user_id": user.id})
+enabled = client.with_context({"user_id": user.id}).configs["new-checkout"]
 ```
 
 **Plan-based features**:
 
 ```python
-max_items = client.get("max-items", context={"plan": user.plan})
+max_items = client.with_context({"plan": user.plan}).configs["max-items"]
 # Returns different values for free/pro/enterprise plans
 ```
 
 **Geographic targeting**:
 
 ```python
-content = client.get("homepage-banner", context={"country": request.country})
+content = client.with_context({"country": request.country}).configs["homepage-banner"]
 ```
 
 ## Subscribing to Changes
@@ -190,7 +274,7 @@ from replane import (
 )
 
 try:
-    value = client.get("my-config")
+    value = client.configs["my-config"]
 except ConfigNotFoundError as e:
     print(f"Config not found: {e.config_name}")
 except TimeoutError as e:
@@ -214,7 +298,7 @@ client = create_test_client({
     "rate-limit": 100,
 })
 
-assert client.get("feature-enabled") is True
+assert client.configs["feature-enabled"] is True
 
 # With overrides
 client = InMemoryReplaneClient()
@@ -230,8 +314,8 @@ client.set_config(
     }],
 )
 
-assert client.get("feature", context={"plan": "free"}) is False
-assert client.get("feature", context={"plan": "pro"}) is True
+assert client.with_context({"plan": "free"}).configs["feature"] is False
+assert client.with_context({"plan": "pro"}).configs["feature"] is True
 ```
 
 ### Pytest Fixture Example
@@ -248,7 +332,7 @@ def replane_client():
     })
 
 def test_feature_flag(replane_client):
-    flags = replane_client.get("feature-flags")
+    flags = replane_client.configs["feature-flags"]
     assert flags["dark-mode"] is True
 ```
 
@@ -261,7 +345,7 @@ If you prefer not to use context managers:
 client = Replane(base_url="...", sdk_key="...")
 client.connect()  # Blocks until initialized
 try:
-    value = client.get("config")
+    value = client.configs["config"]
 finally:
     client.close()
 
@@ -269,7 +353,7 @@ finally:
 client = AsyncReplane(base_url="...", sdk_key="...")
 await client.connect()
 try:
-    value = client.get("config")
+    value = client.configs["config"]
 finally:
     await client.close()
 ```
@@ -304,7 +388,7 @@ def get_replane() -> AsyncReplane:
 
 @app.get("/items")
 async def get_items(replane: AsyncReplane = Depends(get_replane)):
-    max_items = replane.get("max-items", context={"plan": "free"})
+    max_items = replane.with_context({"plan": "free"}).configs["max-items"]
     return {"max_items": max_items}
 ```
 
@@ -328,7 +412,7 @@ def init_replane():
 
 @app.route("/items")
 def get_items():
-    max_items = replane_client.get("max-items")
+    max_items = replane_client.configs["max-items"]
     return {"max_items": max_items}
 ```
 
