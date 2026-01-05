@@ -10,7 +10,7 @@ Both `Replane` and `AsyncReplane` accept the same configuration options:
 from replane import Replane
 
 replane = Replane(
-    # Required
+    # Can be provided here or in connect()
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 
@@ -26,30 +26,38 @@ replane = Replane(
 )
 ```
 
-### Required Options
+### Connection Options
 
 #### `base_url`
 
 - **Type:** `str`
-- **Required:** Yes
+- **Required:** Yes (in constructor or `connect()`)
 
-The base URL of your Replane server.
+The base URL of your Replane server. Can be provided in the constructor or in `connect()`.
 
 ```python
-base_url="https://replane.example.com"
-base_url="http://localhost:3000"  # Local development
+# In constructor
+replane = Replane(base_url="https://replane.example.com", sdk_key="...")
+
+# Or in connect()
+replane = Replane(sdk_key="...")
+replane.connect(base_url="https://replane.example.com")
 ```
 
 #### `sdk_key`
 
 - **Type:** `str`
-- **Required:** Yes
+- **Required:** Yes (in constructor or `connect()`)
 
-Your SDK key from the Replane dashboard. SDK keys are scoped to a specific project and environment.
+Your SDK key from the Replane dashboard. Can be provided in the constructor or in `connect()`.
 
 ```python
-sdk_key="rp_abc123..."  # Production
-sdk_key="rp_test_xyz789..."  # Testing/staging
+# In constructor
+replane = Replane(base_url="...", sdk_key="rp_abc123...")
+
+# Or in connect()
+replane = Replane(base_url="...")
+replane.connect(sdk_key="rp_abc123...")
 ```
 
 ### Optional Options

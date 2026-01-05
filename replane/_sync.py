@@ -311,8 +311,8 @@ class Replane(Generic[ConfigsT]):
 
     def __init__(
         self,
-        base_url: str,
-        sdk_key: str,
+        base_url: str | None = None,
+        sdk_key: str | None = None,
         *,
         context: dict[str, ContextValue] | None = None,
         defaults: dict[str, Any] | None = None,
@@ -327,8 +327,8 @@ class Replane(Generic[ConfigsT]):
         """Initialize the Replane client.
 
         Args:
-            base_url: Base URL of the Replane server.
-            sdk_key: SDK key for authentication.
+            base_url: Base URL of the Replane server. Can also be provided in connect().
+            sdk_key: SDK key for authentication. Can also be provided in connect().
             context: Default context for override evaluation.
             defaults: Default values for configs if not loaded from server.
             required: List of config names that must be present on init.
@@ -359,7 +359,7 @@ class Replane(Generic[ConfigsT]):
                 logger.debug("Default configs: %s", list(defaults.keys()))
             if required:
                 logger.debug("Required configs: %s", required)
-        self._base_url = base_url.rstrip("/")
+        self._base_url = base_url.rstrip("/") if base_url else None
         self._sdk_key = sdk_key
         # Generate replaneClientId and set it as base context.
         # User-provided context values take precedence (merged on top).
@@ -394,19 +394,40 @@ class Replane(Generic[ConfigsT]):
         self._stream_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
-    def connect(self, *, wait: bool = True) -> None:
+    def connect(
+        self,
+        base_url: str | None = None,
+        sdk_key: str | None = None,
+        *,
+        wait: bool = True,
+    ) -> None:
         """Connect to the Replane server and start receiving updates.
 
         This starts a background thread that maintains the SSE connection.
 
         Args:
+            base_url: Base URL of the Replane server. Overrides constructor value.
+            sdk_key: SDK key for authentication. Overrides constructor value.
             wait: If True, block until initial configs are loaded.
 
         Raises:
+            ValueError: If base_url or sdk_key is not provided here or in constructor.
             ReplaneError: If connection fails or required configs are missing.
         """
         if self._closed:
             raise ClientClosedError()
+
+        # Apply overrides from connect() if provided
+        if base_url is not None:
+            self._base_url = base_url.rstrip("/")
+        if sdk_key is not None:
+            self._sdk_key = sdk_key
+
+        # Validate required parameters
+        if not self._base_url:
+            raise ValueError("base_url is required - provide it in constructor or connect()")
+        if not self._sdk_key:
+            raise ValueError("sdk_key is required - provide it in constructor or connect()")
 
         logger.debug("connect() called, wait=%s", wait)
 
