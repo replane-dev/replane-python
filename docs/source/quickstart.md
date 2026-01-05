@@ -19,7 +19,7 @@ from replane import Replane
 
 # Using context manager (recommended)
 with Replane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
     # Get a simple config value
@@ -45,7 +45,7 @@ from replane import AsyncReplane
 
 async def main():
     async with AsyncReplane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     ) as replane:
         # configs access is sync - it reads from local cache
@@ -73,7 +73,7 @@ from replane import Replane
 
 # Option 1: Provide credentials in constructor
 replane = Replane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 )
 replane.connect()
@@ -81,7 +81,7 @@ replane.connect()
 # Option 2: Provide credentials in connect()
 replane = Replane()
 replane.connect(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 )
 
@@ -173,7 +173,7 @@ from replane import (
 
 try:
     with Replane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     ) as replane:
         value = replane.configs["my-config"]

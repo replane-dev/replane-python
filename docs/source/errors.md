@@ -49,7 +49,7 @@ from replane import (
 
 try:
     with Replane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     ) as replane:
         value = replane.configs["my-config"]

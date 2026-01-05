@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     """Manage Replane client lifecycle."""
     global _replane
     _replane = AsyncReplane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     )
     await _replane.connect()
@@ -111,7 +111,7 @@ def get_replane() -> Replane:
     global _replane
     if _replane is None:
         _replane = Replane(
-            base_url="https://replane.example.com",
+            base_url="https://cloud.replane.dev",
             sdk_key="rp_...",
         )
         _replane.connect()
@@ -190,7 +190,7 @@ replane = FlaskReplane()
 
 def create_app():
     app = Flask(__name__)
-    app.config["REPLANE_URL"] = "https://replane.example.com"
+    app.config["REPLANE_URL"] = "https://cloud.replane.dev"
     app.config["REPLANE_SDK_KEY"] = "rp_..."
     replane.init_app(app)
     return app
@@ -208,7 +208,7 @@ Django can use either the sync or async client depending on your setup.
 
 ```python
 # settings.py
-REPLANE_URL = "https://replane.example.com"
+REPLANE_URL = "https://cloud.replane.dev"
 REPLANE_SDK_KEY = "rp_..."
 
 # replane_client.py
@@ -305,7 +305,7 @@ _replane: AsyncReplane | None = None
 async def startup():
     global _replane
     _replane = AsyncReplane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     )
     await _replane.connect()
@@ -336,7 +336,7 @@ async def create_app():
 
     async def on_startup(app):
         app["replane"] = AsyncReplane(
-            base_url="https://replane.example.com",
+            base_url="https://cloud.replane.dev",
             sdk_key="rp_...",
         )
         await app["replane"].connect()

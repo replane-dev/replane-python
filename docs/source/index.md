@@ -20,7 +20,7 @@ from replane import Replane
 
 # Using context manager (recommended)
 with Replane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
     # Get a config value
@@ -49,7 +49,7 @@ from replane import AsyncReplane
 
 # Using async context manager (recommended)
 async with AsyncReplane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
     rate_limit = replane.configs["rate-limit"]
@@ -97,7 +97,7 @@ from replane import Replane
 from replane_types import Configs
 
 with Replane[Configs](
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
     # Dictionary-style access with full type safety

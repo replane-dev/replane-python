@@ -11,7 +11,7 @@ from replane import Replane
 
 replane = Replane(
     # Can be provided here or in connect()
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 
     # Optional
@@ -37,11 +37,11 @@ The base URL of your Replane server. Can be provided in the constructor or in `c
 
 ```python
 # In constructor
-replane = Replane(base_url="https://replane.example.com", sdk_key="...")
+replane = Replane(base_url="https://cloud.replane.dev", sdk_key="...")
 
 # Or in connect()
 replane = Replane(sdk_key="...")
-replane.connect(base_url="https://replane.example.com")
+replane.connect(base_url="https://cloud.replane.dev")
 ```
 
 #### `sdk_key`
@@ -213,9 +213,9 @@ When enabled, you'll see logs for:
 Example output:
 
 ```
-2024-01-15 10:30:00 [DEBUG] replane: Initializing Replane: base_url=https://replane.example.com, ...
+2024-01-15 10:30:00 [DEBUG] replane: Initializing Replane: base_url=https://cloud.replane.dev, ...
 2024-01-15 10:30:00 [DEBUG] replane: connect() called, wait=True
-2024-01-15 10:30:00 [DEBUG] replane: Connecting to SSE: host=replane.example.com, port=443, https=True
+2024-01-15 10:30:00 [DEBUG] replane: Connecting to SSE: host=cloud.replane.dev, port=443, https=True
 2024-01-15 10:30:00 [DEBUG] replane: Response status: 200 OK
 2024-01-15 10:30:00 [DEBUG] replane: SSE event received: type=init
 2024-01-15 10:30:00 [DEBUG] replane: Loaded config: rate-limit (value=100, overrides=2)

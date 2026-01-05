@@ -59,7 +59,7 @@ Requires `pip install replane[async]`:
 from replane import AsyncReplane
 
 async with AsyncReplane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
     # Access configs from local cache
@@ -138,7 +138,7 @@ Both clients accept the same configuration:
 
 ```python
 replane = Replane(
-    base_url="https://replane.example.com",
+    base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 
     # Default context applied to all config evaluations
@@ -402,7 +402,7 @@ _replane: AsyncReplane | None = None
 async def lifespan(app: FastAPI):
     global _replane
     _replane = AsyncReplane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     )
     await _replane.connect()
@@ -437,7 +437,7 @@ _replane: Replane | None = None
 def init_replane():
     global _replane
     _replane = Replane(
-        base_url="https://replane.example.com",
+        base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     )
     _replane.connect()
