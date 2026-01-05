@@ -13,6 +13,8 @@ Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform
 
 ## Quick Example
 
+### Sync Client
+
 ```python
 from replane import Replane
 
@@ -38,6 +40,33 @@ replane.connect(base_url="...", sdk_key="...")
 rate_limit = replane.configs["rate-limit"]
 
 replane.close()
+```
+
+### Async Client
+
+```python
+from replane import AsyncReplane
+
+# Using async context manager (recommended)
+async with AsyncReplane(
+    base_url="https://replane.example.com",
+    sdk_key="rp_...",
+) as replane:
+    rate_limit = replane.configs["rate-limit"]
+
+    user_client = replane.with_context({"user_id": user.id})
+    feature_enabled = user_client.configs["new-feature"]
+```
+
+Or without context manager:
+
+```python
+replane = AsyncReplane()
+await replane.connect(base_url="...", sdk_key="...")
+
+rate_limit = replane.configs["rate-limit"]
+
+await replane.close()
 ```
 
 ```{toctree}

@@ -148,9 +148,7 @@ class TestAsyncClientCredentials:
         finally:
             await client.close()
 
-    async def test_connect_credentials_override_constructor(
-        self, mock_server: MockSSEServer
-    ):
+    async def test_connect_credentials_override_constructor(self, mock_server: MockSSEServer):
         """Credentials in connect() override those in constructor."""
         mock_server.send_init([create_config("feature", True)])
 
@@ -168,9 +166,7 @@ class TestAsyncClientCredentials:
         finally:
             await client.close()
 
-    async def test_partial_credentials_in_constructor_and_connect(
-        self, mock_server: MockSSEServer
-    ):
+    async def test_partial_credentials_in_constructor_and_connect(self, mock_server: MockSSEServer):
         """base_url in constructor, sdk_key in connect() works."""
         mock_server.send_init([create_config("feature", True)])
 
