@@ -17,8 +17,8 @@ replane = InMemoryReplaneClient({
 })
 
 # Use like the real client
-assert replane.get("feature-enabled") is True
-assert replane.get("rate-limit") == 100
+assert replane.configs["feature-enabled"] is True
+assert replane.configs["rate-limit"] == 100
 ```
 
 ## Using create_test_client
@@ -50,10 +50,10 @@ def replane():
     })
 
 def test_feature_flag(replane):
-    assert replane.get("feature-enabled") is True
+    assert replane.configs["feature-enabled"] is True
 
 def test_rate_limit(replane):
-    assert replane.get("rate-limit") == 100
+    assert replane.configs["rate-limit"] == 100
 ```
 
 ## Testing with Overrides
@@ -80,11 +80,15 @@ def test_plan_based_rate_limits():
     )
 
     # Free user gets base value
-    assert replane.get("rate-limit", context={"plan": "free"}) == 100
+    free_client = replane.with_context({"plan": "free"})
+    assert free_client.configs["rate-limit"] == 100
 
     # Premium users get override value
-    assert replane.get("rate-limit", context={"plan": "pro"}) == 1000
-    assert replane.get("rate-limit", context={"plan": "enterprise"}) == 1000
+    pro_client = replane.with_context({"plan": "pro"})
+    assert pro_client.configs["rate-limit"] == 1000
+    
+    enterprise_client = replane.with_context({"plan": "enterprise"})
+    assert enterprise_client.configs["rate-limit"] == 1000
 ```
 
 ## Testing Multiple Conditions
@@ -108,9 +112,9 @@ def test_multiple_conditions():
     )
 
     # Both conditions must match
-    assert replane.get("feature", context={"plan": "premium", "region": "us"}) is True
-    assert replane.get("feature", context={"plan": "premium", "region": "eu"}) is False
-    assert replane.get("feature", context={"plan": "free", "region": "us"}) is False
+    assert replane.with_context({"plan": "premium", "region": "us"}).configs["feature"] is True
+    assert replane.with_context({"plan": "premium", "region": "eu"}).configs["feature"] is False
+    assert replane.with_context({"plan": "free", "region": "us"}).configs["feature"] is False
 ```
 
 ## Dynamic Config Updates
@@ -122,13 +126,13 @@ def test_config_updates():
     replane = InMemoryReplaneClient({"feature": False})
 
     # Initially disabled
-    assert replane.get("feature") is False
+    assert replane.configs["feature"] is False
 
     # Update the config
     replane.set("feature", True)
 
     # Now enabled
-    assert replane.get("feature") is True
+    assert replane.configs["feature"] is True
 ```
 
 ## Testing Subscriptions
@@ -157,22 +161,19 @@ Test how your code handles missing configs:
 
 ```python
 import pytest
-from replane.errors import ConfigNotFoundError
 from replane.testing import InMemoryReplaneClient
 
 def test_missing_config():
     replane = InMemoryReplaneClient()
 
-    with pytest.raises(ConfigNotFoundError) as exc_info:
-        replane.get("nonexistent")
-
-    assert exc_info.value.config_name == "nonexistent"
+    with pytest.raises(KeyError):
+        _ = replane.configs["nonexistent"]
 
 def test_missing_with_default():
     replane = InMemoryReplaneClient()
 
     # Should return default, not raise
-    value = replane.get("nonexistent", default="fallback")
+    value = replane.configs.get("nonexistent", "fallback")
     assert value == "fallback"
 ```
 
@@ -202,7 +203,7 @@ def test_with_default_context():
     )
 
     # Default context is used
-    assert replane.get("feature") is True
+    assert replane.configs["feature"] is True
 ```
 
 ## Dependency Injection Pattern
@@ -216,10 +217,8 @@ class FeatureService:
         self.replane = replane
 
     def is_feature_enabled(self, user_id: str) -> bool:
-        return self.replane.get(
-            "new-feature",
-            context={"user_id": user_id}
-        )
+        user_client = self.replane.with_context({"user_id": user_id})
+        return user_client.configs["new-feature"]
 
 # test_your_module.py
 from replane.testing import create_test_client
@@ -239,6 +238,6 @@ The in-memory client supports context managers for cleanup:
 ```python
 def test_with_context_manager():
     with InMemoryReplaneClient({"key": "value"}) as replane:
-        assert replane.get("key") == "value"
+        assert replane.configs["key"] == "value"
     # Client is closed after the block
 ```

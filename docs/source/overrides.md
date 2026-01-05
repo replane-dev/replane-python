@@ -21,15 +21,18 @@ Config: "rate-limit"
 
 ## Using Context
 
-Pass context to `get()` to evaluate overrides:
+Use `with_context()` to evaluate overrides:
 
 ```python
 # Without context - returns base value
-rate_limit = replane.get("rate-limit")  # 100
+rate_limit = replane.configs["rate-limit"]  # 100
 
 # With context - evaluates overrides
-rate_limit = replane.get("rate-limit", context={"plan": "pro"})  # 1000
-rate_limit = replane.get("rate-limit", context={"plan": "enterprise"})  # 10000
+pro_client = replane.with_context({"plan": "pro"})
+rate_limit = pro_client.configs["rate-limit"]  # 1000
+
+enterprise_client = replane.with_context({"plan": "enterprise"})
+rate_limit = enterprise_client.configs["rate-limit"]  # 10000
 ```
 
 ## Context Properties
@@ -61,7 +64,7 @@ context = {
 
 ## Default Context
 
-Set a default context that applies to all `get()` calls:
+Set a default context that applies to all config accesses:
 
 ```python
 replane = Replane(
@@ -72,11 +75,12 @@ replane = Replane(
     },
 )
 
-# These calls include the default context
-replane.get("feature")  # context: {"environment": "production", "app_version": "2.1.0"}
+# These accesses include the default context
+replane.configs["feature"]  # context: {"environment": "production", "app_version": "2.1.0"}
 
-# Additional context is merged with defaults
-replane.get("feature", context={"user_id": "123"})
+# Additional context is merged with defaults using with_context()
+user_client = replane.with_context({"user_id": "123"})
+user_client.configs["feature"]
 # Effective context: {"environment": "production", "app_version": "2.1.0", "user_id": "123"}
 ```
 
@@ -90,8 +94,8 @@ Match when a property equals a specific value:
 
 ```python
 # Override: plan equals "premium"
-replane.get("feature", context={"plan": "premium"})  # Matches
-replane.get("feature", context={"plan": "free"})     # Doesn't match
+replane.with_context({"plan": "premium"}).configs["feature"]  # Matches
+replane.with_context({"plan": "free"}).configs["feature"]     # Doesn't match
 ```
 
 ### In / Not In
@@ -100,9 +104,9 @@ Match when a property is (or isn't) in a list of values:
 
 ```python
 # Override: plan in ["pro", "enterprise"]
-replane.get("feature", context={"plan": "pro"})        # Matches
-replane.get("feature", context={"plan": "enterprise"}) # Matches
-replane.get("feature", context={"plan": "free"})       # Doesn't match
+replane.with_context({"plan": "pro"}).configs["feature"]        # Matches
+replane.with_context({"plan": "enterprise"}).configs["feature"] # Matches
+replane.with_context({"plan": "free"}).configs["feature"]       # Doesn't match
 ```
 
 ### Comparison (lt, lte, gt, gte)
@@ -111,8 +115,8 @@ Numeric comparisons:
 
 ```python
 # Override: age >= 18
-replane.get("adult-content", context={"age": 21})  # Matches
-replane.get("adult-content", context={"age": 15})  # Doesn't match
+replane.with_context({"age": 21}).configs["adult-content"]  # Matches
+replane.with_context({"age": 15}).configs["adult-content"]  # Doesn't match
 ```
 
 ### Segmentation (Percentage Rollout)
@@ -121,7 +125,8 @@ Roll out features to a percentage of users:
 
 ```python
 # Override: 10% of users (based on user_id)
-replane.get("new-checkout", context={"user_id": "user-123"})
+user_client = replane.with_context({"user_id": "user-123"})
+user_client.configs["new-checkout"]
 # Deterministic: same user always gets same result
 ```
 
@@ -136,9 +141,9 @@ Combine conditions with logical operators:
 
 ```python
 # Override: (plan == "pro" OR plan == "enterprise") AND region == "us"
-replane.get("feature", context={"plan": "pro", "region": "us"})      # Matches
-replane.get("feature", context={"plan": "pro", "region": "eu"})      # Doesn't match
-replane.get("feature", context={"plan": "free", "region": "us"})     # Doesn't match
+replane.with_context({"plan": "pro", "region": "us"}).configs["feature"]      # Matches
+replane.with_context({"plan": "pro", "region": "eu"}).configs["feature"]      # Doesn't match
+replane.with_context({"plan": "free", "region": "us"}).configs["feature"]     # Doesn't match
 ```
 
 ## Client-Side Evaluation
@@ -155,7 +160,8 @@ This design provides:
 ### Feature Flags
 
 ```python
-if replane.get("new-dashboard-enabled", context={"user_id": user.id}):
+user_client = replane.with_context({"user_id": user.id})
+if user_client.configs["new-dashboard-enabled"]:
     return render_new_dashboard()
 else:
     return render_old_dashboard()
@@ -164,7 +170,8 @@ else:
 ### Plan-Based Features
 
 ```python
-max_projects = replane.get("max-projects", context={"plan": user.plan})
+plan_client = replane.with_context({"plan": user.plan})
+max_projects = plan_client.configs["max-projects"]
 # free: 3, pro: 10, enterprise: unlimited (-1)
 ```
 
@@ -173,28 +180,22 @@ max_projects = replane.get("max-projects", context={"plan": user.plan})
 Configure a 10% rollout in Replane dashboard, then:
 
 ```python
-use_new_algorithm = replane.get(
-    "new-recommendation-algorithm",
-    context={"user_id": user.id}
-)
+user_client = replane.with_context({"user_id": user.id})
+use_new_algorithm = user_client.configs["new-recommendation-algorithm"]
 ```
 
 ### Geographic Targeting
 
 ```python
-banner_content = replane.get(
-    "homepage-banner",
-    context={"country": request.geo.country}
-)
+geo_client = replane.with_context({"country": request.geo.country})
+banner_content = geo_client.configs["homepage-banner"]
 ```
 
 ### A/B Testing
 
 ```python
-button_color = replane.get(
-    "checkout-button-color",
-    context={"user_id": user.id}
-)
+user_client = replane.with_context({"user_id": user.id})
+button_color = user_client.configs["checkout-button-color"]
 # Returns "blue", "green", or "red" based on user's bucket
 ```
 
@@ -209,8 +210,8 @@ When a condition references a property not in the context:
 
 ```python
 # Override requires "plan" property
-replane.get("feature", context={})  # Override won't match (no plan)
-replane.get("feature", context={"plan": "pro"})  # Override can match
+replane.configs["feature"]  # Override won't match (no plan in default context)
+replane.with_context({"plan": "pro"}).configs["feature"]  # Override can match
 ```
 
 Best practice: ensure your context includes all properties that overrides might reference.

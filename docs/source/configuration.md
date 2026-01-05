@@ -59,7 +59,7 @@ sdk_key="rp_test_xyz789..."  # Testing/staging
 - **Type:** `dict[str, str | int | float | bool | None]`
 - **Default:** `{}`
 
-Default context applied to all `get()` calls. This is merged with any context passed directly to `get()`.
+Default context applied to all config accesses. This is merged with any context passed via `with_context()`.
 
 ```python
 # Set default context
@@ -71,11 +71,12 @@ replane = Replane(
     },
 )
 
-# This call uses the default context
-value = replane.get("config-name")
+# This uses the default context
+value = replane.configs["config-name"]
 
-# This merges with default context
-value = replane.get("config-name", context={"user_id": "123"})
+# This merges with default context using with_context()
+user_client = replane.with_context({"user_id": "123"})
+value = user_client.configs["config-name"]
 # Effective context: {"environment": "production", "region": "us-east", "user_id": "123"}
 ```
 
@@ -100,7 +101,7 @@ replane = Replane(
 Defaults are used in two scenarios:
 
 1. During initialization if a config isn't returned by the server
-2. If `get()` is called before initialization completes
+2. If configs are accessed before initialization completes
 
 #### `required`
 
@@ -226,7 +227,7 @@ replane = Replane(base_url="...", sdk_key="...")
 replane.connect()  # Blocks until ready
 
 try:
-    value = replane.get("config")
+    value = replane.configs["config"]
 finally:
     replane.close()
 ```
@@ -250,7 +251,7 @@ replane = AsyncReplane(base_url="...", sdk_key="...")
 await replane.connect()
 
 try:
-    value = replane.get("config")
+    value = replane.configs["config"]
 finally:
     await replane.close()
 ```

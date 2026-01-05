@@ -246,3 +246,4 @@ class TestCreateTestClient:
     def test_with_default_context(self):
         client = create_test_client({"x": 1}, context={"env": "test"})
         assert client._context == {"env": "test"}
+

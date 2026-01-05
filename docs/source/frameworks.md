@@ -37,7 +37,7 @@ def get_replane() -> AsyncReplane:
 
 @app.get("/items")
 async def get_items(replane: AsyncReplane = Depends(get_replane)):
-    max_items = replane.get("max-items-per-page")
+    max_items = replane.configs["max-items-per-page"]
     return {"max_items": max_items}
 ```
 
@@ -52,14 +52,14 @@ async def get_features(
     replane: AsyncReplane = Depends(get_replane),
 ):
     # Build context from request/user
-    context = {
+    user_client = replane.with_context({
         "user_id": request.state.user.id,
         "plan": request.state.user.plan,
-    }
+    })
 
     return {
-        "dark_mode": replane.get("dark-mode-enabled", context=context),
-        "beta_features": replane.get("beta-features", context=context),
+        "dark_mode": user_client.configs["dark-mode-enabled"],
+        "beta_features": user_client.configs["beta-features"],
     }
 ```
 
@@ -69,30 +69,22 @@ Create a dependency that automatically includes user context:
 
 ```python
 from fastapi import Request, Depends
-
-class ReplaneWithContext:
-    def __init__(self, client: AsyncReplane, context: dict):
-        self._client = client
-        self._context = context
-
-    def get(self, name: str, **kwargs):
-        ctx = {**self._context, **kwargs.get("context", {})}
-        return self._client.get(name, context=ctx, **{k: v for k, v in kwargs.items() if k != "context"})
+from replane._async import ContextualAsyncReplane
 
 def get_replane_with_context(
     request: Request,
     replane: AsyncReplane = Depends(get_replane),
-) -> ReplaneWithContext:
+) -> ContextualAsyncReplane:
     context = {}
     if hasattr(request.state, "user"):
         context["user_id"] = request.state.user.id
         context["plan"] = request.state.user.plan
-    return ReplaneWithContext(replane, context)
+    return replane.with_context(context)
 
 @app.get("/dashboard")
-async def dashboard(config: ReplaneWithContext = Depends(get_replane_with_context)):
+async def dashboard(config: ContextualAsyncReplane = Depends(get_replane_with_context)):
     # Context is automatically included
-    show_analytics = config.get("show-analytics")
+    show_analytics = config.configs["show-analytics"]
     return {"show_analytics": show_analytics}
 ```
 
@@ -124,7 +116,7 @@ def get_replane() -> Replane:
 @app.route("/items")
 def get_items():
     replane = get_replane()
-    max_items = replane.get("max-items-per-page")
+    max_items = replane.configs["max-items-per-page"]
     return {"max_items": max_items}
 ```
 
@@ -155,7 +147,7 @@ def create_app():
 @app.route("/features")
 def features():
     replane = current_app.replane
-    return {"enabled": replane.get("feature-enabled")}
+    return {"enabled": replane.configs["feature-enabled"]}
 ```
 
 ### Flask Extension Pattern
@@ -201,7 +193,7 @@ def create_app():
 
 @app.route("/")
 def index():
-    return {"feature": replane.client.get("feature")}
+    return {"feature": replane.client.configs["feature"]}
 ```
 
 ## Django
@@ -237,9 +229,13 @@ from .replane_client import get_replane
 
 def features_view(request):
     replane = get_replane()
-    context = {"user_id": str(request.user.id)} if request.user.is_authenticated else {}
+    if request.user.is_authenticated:
+        user_client = replane.with_context({"user_id": str(request.user.id)})
+        feature_enabled = user_client.configs["feature"]
+    else:
+        feature_enabled = replane.configs["feature"]
     return JsonResponse({
-        "feature_enabled": replane.get("feature", context=context),
+        "feature_enabled": feature_enabled,
     })
 ```
 
@@ -269,7 +265,7 @@ from .replane_client import get_replane
 async def features_view(request):
     replane = await get_replane()
     return JsonResponse({
-        "feature_enabled": replane.get("feature"),
+        "feature_enabled": replane.configs["feature"],
     })
 ```
 
@@ -315,7 +311,7 @@ async def shutdown():
         await _replane.close()
 
 async def homepage(request):
-    feature = _replane.get("feature")
+    feature = _replane.configs["feature"]
     return JSONResponse({"feature": feature})
 
 app = Starlette(
@@ -353,7 +349,7 @@ async def create_app():
 async def handler(request):
     replane = request.app["replane"]
     return web.json_response({
-        "feature": replane.get("feature"),
+        "feature": replane.configs["feature"],
     })
 
 if __name__ == "__main__":

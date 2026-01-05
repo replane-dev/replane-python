@@ -21,13 +21,11 @@ with Replane(
     sdk_key="rp_...",
 ) as replane:
     # Get a config value
-    rate_limit = replane.get("rate-limit")
+    rate_limit = replane.configs["rate-limit"]
 
     # Get with context for override evaluation
-    feature_enabled = replane.get(
-        "new-feature",
-        context={"user_id": user.id, "plan": user.plan},
-    )
+    user_client = replane.with_context({"user_id": user.id, "plan": user.plan})
+    feature_enabled = user_client.configs["new-feature"]
 ```
 
 ```{toctree}

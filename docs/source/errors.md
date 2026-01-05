@@ -6,7 +6,7 @@ The Replane SDK uses a hierarchy of exceptions to help you handle errors appropr
 
 ```
 ReplaneError (base class)
-├── ConfigNotFoundError
+├── ConfigNotFoundError (used for required configs at init time)
 ├── TimeoutError
 ├── AuthenticationError
 ├── NetworkError
@@ -15,13 +15,15 @@ ReplaneError (base class)
 └── MissingDependencyError
 ```
 
+Note: Accessing a missing config via `client.configs["name"]` raises a standard `KeyError`, not `ConfigNotFoundError`. Use `client.configs.get("name", default)` to avoid exceptions.
+
 ## Error Codes
 
 Each `ReplaneError` has a `code` attribute from the `ErrorCode` enum:
 
 | Code                 | Description                             |
 | -------------------- | --------------------------------------- |
-| `not_found`          | Config doesn't exist                    |
+| `not_found`          | Config doesn't exist (required configs) |
 | `timeout`            | Operation timed out                     |
 | `network_error`      | Network request failed                  |
 | `auth_error`         | Authentication failed (invalid SDK key) |
@@ -41,7 +43,6 @@ Each `ReplaneError` has a `code` attribute from the `ErrorCode` enum:
 from replane import (
     Replane,
     ReplaneError,
-    ConfigNotFoundError,
     TimeoutError,
     AuthenticationError,
 )
@@ -51,9 +52,9 @@ try:
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     ) as replane:
-        value = replane.get("my-config")
-except ConfigNotFoundError as e:
-    print(f"Config '{e.config_name}' not found")
+        value = replane.configs["my-config"]
+except KeyError as e:
+    print(f"Config not found: {e}")
 except TimeoutError as e:
     print(f"Timed out after {e.timeout_ms}ms")
 except AuthenticationError:
@@ -68,12 +69,9 @@ except ReplaneError as e:
 from replane import ReplaneError, ErrorCode
 
 try:
-    value = replane.get("config")
+    replane.connect()
 except ReplaneError as e:
     match e.code:
-        case ErrorCode.NOT_FOUND:
-            # Handle missing config
-            value = default_value
         case ErrorCode.TIMEOUT:
             # Maybe retry
             pass
@@ -87,37 +85,55 @@ except ReplaneError as e:
 
 ## Specific Exceptions
 
-### ConfigNotFoundError
+### KeyError (Missing Config)
 
-Raised when requesting a config that doesn't exist.
+Accessing a missing config via bracket notation raises a standard `KeyError`:
 
 ```python
-from replane import ConfigNotFoundError
-
 try:
-    value = replane.get("nonexistent-config")
-except ConfigNotFoundError as e:
-    print(f"Config not found: {e.config_name}")
-    # Use a default value instead
+    value = replane.configs["nonexistent-config"]
+except KeyError as e:
+    print(f"Config not found: {e}")
     value = "default"
 ```
 
-**Attributes:**
-
-- `config_name: str` - Name of the missing config
-
-**Prevention:** Use `default` parameter or `defaults` option:
+**Prevention:** Use `.get()` method or `defaults` option:
 
 ```python
-# With default
-value = replane.get("config", default="fallback")
+# With get() method
+value = replane.configs.get("config", "fallback")
 
 # With defaults during init
 replane = Replane(
     ...,
     defaults={"config": "fallback"},
 )
+
+# With with_defaults()
+safe_client = replane.with_defaults({"config": "fallback"})
+value = safe_client.configs["config"]  # Returns "fallback" if not configured
 ```
+
+### ConfigNotFoundError
+
+Raised when required configs are missing during initialization.
+
+```python
+from replane import Replane, ConfigNotFoundError
+
+try:
+    with Replane(
+        ...,
+        required=["critical-config-1", "critical-config-2"],
+    ) as replane:
+        pass
+except ConfigNotFoundError as e:
+    print(f"Missing required configs: {e}")
+```
+
+**Attributes:**
+
+- `config_name: str` - Name or description of missing config(s)
 
 ### TimeoutError
 
@@ -199,7 +215,7 @@ replane.connect()
 replane.close()
 
 try:
-    replane.get("config")  # Raises ClientClosedError
+    _ = replane.configs["config"]  # Raises ClientClosedError
 except ClientClosedError:
     print("Client was already closed")
 ```
@@ -215,10 +231,10 @@ replane = Replane(...)
 replane.connect(wait=False)  # Don't wait
 
 try:
-    replane.get("config")  # May raise if not ready
+    _ = replane.configs["config"]  # May raise if not ready
 except NotInitializedError:
     replane.wait_for_init()  # Wait then retry
-    value = replane.get("config")
+    value = replane.configs["config"]
 ```
 
 ### MissingDependencyError
@@ -259,22 +275,22 @@ except ReplaneError as e:
 2. **Use defaults** for resilience against missing configs
 3. **Log errors** with their codes for debugging
 4. **Don't catch and ignore** - at minimum, log the error
-5. **Use `default` parameter** instead of catching `ConfigNotFoundError` when appropriate
+5. **Use `.get()` method** instead of catching `KeyError` when appropriate
 
 ```python
 # Good: specific handling
 try:
-    value = replane.get("critical-config")
-except ConfigNotFoundError:
+    value = replane.configs["critical-config"]
+except KeyError:
     logger.error("Critical config missing!")
     raise  # Re-raise for critical configs
 
 # Good: graceful fallback
-value = replane.get("optional-config", default="safe-default")
+value = replane.configs.get("optional-config", "safe-default")
 
 # Bad: silently ignoring
 try:
-    value = replane.get("config")
-except ReplaneError:
+    value = replane.configs["config"]
+except KeyError:
     pass  # Don't do this!
 ```

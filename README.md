@@ -266,7 +266,6 @@ client.subscribe(on_change)
 ```python
 from replane import (
     ReplaneError,
-    ConfigNotFoundError,
     TimeoutError,
     AuthenticationError,
     NetworkError,
@@ -275,8 +274,8 @@ from replane import (
 
 try:
     value = client.configs["my-config"]
-except ConfigNotFoundError as e:
-    print(f"Config not found: {e.config_name}")
+except KeyError as e:
+    print(f"Config not found: {e}")
 except TimeoutError as e:
     print(f"Timed out after {e.timeout_ms}ms")
 except AuthenticationError:
