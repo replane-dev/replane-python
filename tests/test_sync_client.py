@@ -1656,39 +1656,19 @@ class TestReplaneClientId:
                 == "per-request-value"
             )
 
-    def test_unique_replane_client_id_per_client_instance(self, mock_server: MockSSEServer):
+    def test_unique_replane_client_id_per_client_instance(self):
         """Each client instance gets a unique replaneClientId."""
-        config = create_config(
-            "feature",
-            "default",
-            overrides=[
-                create_override(
-                    "50-percent-rollout",
-                    "rollout-value",
-                    [
-                        {
-                            "operator": "segmentation",
-                            "property": "replaneClientId",
-                            "fromPercentage": 0,
-                            "toPercentage": 50,
-                            "seed": "test-seed",
-                        }
-                    ],
-                ),
-            ],
-        )
-
-        # Create multiple clients and check they get different segmentation results
-        results = []
+        # Create multiple client instances and collect their auto-generated IDs
+        # We don't need to connect - the ID is generated at construction time
+        client_ids = set()
         for _ in range(10):
-            # Each client connection needs its own init event
-            mock_server.send_init([config])
-            with Replane(
-                base_url=mock_server.url,
+            client = Replane(
+                base_url="http://localhost:9999",  # Won't connect
                 sdk_key="rp_test_key",
-            ) as client:
-                results.append(client.configs["feature"])
+            )
+            client_id = client._context.get("replaneClientId")
+            assert client_id is not None, "replaneClientId should be auto-generated"
+            client_ids.add(client_id)
 
-        # With 10 clients and 50% rollout, we should statistically see both values
-        # This test mainly verifies that segmentation is working
-        assert "rollout-value" in results or "default" in results
+        # All 10 clients should have unique IDs
+        assert len(client_ids) == 10, "Each client should get a unique replaneClientId"
