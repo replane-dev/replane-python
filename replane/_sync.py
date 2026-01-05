@@ -53,7 +53,7 @@ class ConfigAccessor(Generic[ConfigsT]):
     The type parameter ``ConfigsT`` should be a TypedDict for full type safety.
 
     Example:
-        >>> config_value = client.configs["my-feature-flag"]
+        >>> config_value = replane.configs["my-feature-flag"]
         >>> print(config_value["enabled"])  # Access typed properties
     """
 
@@ -169,9 +169,9 @@ class ContextualReplane(Generic[ConfigsT]):
     and provides the same interface as ``Replane``, but with merged context/defaults.
 
     Example:
-        >>> with Replane(...) as client:
+        >>> with Replane(...) as replane:
         ...     # Create a scoped client for a specific user
-        ...     user_client = client.with_context({"user_id": "123", "plan": "premium"})
+        ...     user_client = replane.with_context({"user_id": "123", "plan": "premium"})
         ...     rate_limit = user_client.configs["rate-limit"]  # Uses merged context
         ...
         ...     # Create a scoped client with additional defaults
@@ -299,13 +299,13 @@ class Replane(Generic[ConfigsT]):
         >>> client.close()
 
     For simpler usage, prefer the context manager:
-        >>> with Replane(...) as client:
-        ...     value = client.get("feature-flag")
+        >>> with Replane(...) as replane:
+        ...     value = replane.configs["feature-flag"]
 
     With generated types for better type safety (recommended):
         >>> from replane_types import Configs
-        >>> with Replane[Configs](...) as client:
-        ...     config = client.configs["feature-flag"]  # fully typed
+        >>> with Replane[Configs](...) as replane:
+        ...     config = replane.configs["feature-flag"]  # fully typed
         ...     print(config["enabled"])  # type-safe property access
     """
 
@@ -502,7 +502,7 @@ class Replane(Generic[ConfigsT]):
         When using generated TypedDict types, provides full type safety.
 
         Example:
-            >>> config = client.configs["my-feature-flag"]
+            >>> config = replane.configs["my-feature-flag"]
             >>> print(config["enabled"])
 
         Returns:
@@ -527,14 +527,14 @@ class Replane(Generic[ConfigsT]):
         This is useful for creating scoped clients for specific users or requests:
 
         Example:
-            >>> with Replane(...) as client:
+            >>> with Replane(...) as replane:
             ...     # Create a scoped client for a specific user
-            ...     user_client = client.with_context({
+            ...     user_client = replane.with_context({
             ...         "user_id": user.id,
             ...         "plan": user.plan,
             ...     })
             ...     # All operations use the merged context
-            ...     rate_limit = user_client.get("rate-limit")
+            ...     rate_limit = user_client.configs["rate-limit"]
             ...     settings = user_client.configs["app-settings"]
 
         Args:
@@ -558,14 +558,14 @@ class Replane(Generic[ConfigsT]):
         This is useful for providing fallback values for specific use cases:
 
         Example:
-            >>> with Replane(...) as client:
+            >>> with Replane(...) as replane:
             ...     # Create a scoped client with additional defaults
-            ...     safe_client = client.with_defaults({
+            ...     safe_client = replane.with_defaults({
             ...         "timeout": 30,
             ...         "max-retries": 3,
             ...     })
             ...     # Returns 30 if "timeout" is not configured
-            ...     timeout = safe_client.get("timeout")
+            ...     timeout = safe_client.configs["timeout"]
 
         Args:
             defaults: Additional defaults to use when configs are not found.

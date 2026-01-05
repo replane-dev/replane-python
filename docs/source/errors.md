@@ -15,7 +15,7 @@ ReplaneError (base class)
 └── MissingDependencyError
 ```
 
-Note: Accessing a missing config via `client.configs["name"]` raises a standard `KeyError`, not `ConfigNotFoundError`. Use `client.configs.get("name", default)` to avoid exceptions.
+Note: Accessing a missing config via `replane.configs["name"]` raises a standard `KeyError`, not `ConfigNotFoundError`. Use `replane.configs.get("name", default)` to avoid exceptions.
 
 ## Error Codes
 

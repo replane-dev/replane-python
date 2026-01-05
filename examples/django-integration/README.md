@@ -140,8 +140,9 @@ class DemoConfig(AppConfig):
 ```python
 from demo.replane_client import get_replane
 
-client = get_replane()
-value = client.get("feature-flag", context={"user_id": "123"})
+replane = get_replane()
+user_client = replane.with_context({"user_id": "123"})
+value = user_client.configs["feature-flag"]
 ```
 
 ### 4. Middleware (`demo/middleware.py`)

@@ -139,16 +139,16 @@ class InMemoryReplaneClient(Generic[ConfigsT]):
     to connect to a real Replane server.
 
     Example:
-        >>> client = InMemoryReplaneClient({
+        >>> replane = InMemoryReplaneClient({
         ...     "feature-enabled": True,
         ...     "rate-limit": 100,
         ... })
-        >>> assert client.configs["feature-enabled"] is True
-        >>> assert client.configs["rate-limit"] == 100
+        >>> assert replane.configs["feature-enabled"] is True
+        >>> assert replane.configs["rate-limit"] == 100
 
     With overrides:
-        >>> client = InMemoryReplaneClient()
-        >>> client.set_config(
+        >>> replane = InMemoryReplaneClient()
+        >>> replane.set_config(
         ...     "feature",
         ...     value=False,
         ...     overrides=[{
@@ -157,8 +157,8 @@ class InMemoryReplaneClient(Generic[ConfigsT]):
         ...         "value": True,
         ...     }],
         ... )
-        >>> assert client.with_context({"plan": "free"}).configs["feature"] is False
-        >>> assert client.with_context({"plan": "beta"}).configs["feature"] is True
+        >>> assert replane.with_context({"plan": "free"}).configs["feature"] is False
+        >>> assert replane.with_context({"plan": "beta"}).configs["feature"] is True
     """
 
     def __init__(

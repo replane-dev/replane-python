@@ -18,7 +18,7 @@ BASE_URL = os.environ.get("REPLANE_BASE_URL", "https://your-replane-server.com")
 SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "your_sdk_key_here")
 
 # Initialize the Replane client at application startup
-replane_client = Replane(
+replane = Replane(
     base_url=BASE_URL,
     sdk_key=SDK_KEY,
     defaults={
@@ -29,13 +29,13 @@ replane_client = Replane(
 )
 
 # Connect to Replane server
-replane_client.connect()
+replane.connect()
 
 
 # Ensure client is closed on shutdown
 @atexit.register
 def cleanup():
-    replane_client.close()
+    replane.close()
 
 
 def get_user_context():
@@ -57,7 +57,8 @@ def index():
     ctx = get_user_context()
 
     # Check if new dashboard is enabled for this user
-    new_dashboard = replane_client.get("new-dashboard-enabled", context=ctx)
+    user_client = replane.with_context(ctx)
+    new_dashboard = user_client.configs["new-dashboard-enabled"]
 
     if new_dashboard:
         return jsonify({"message": "Welcome to the new dashboard!", "version": "v2"})
@@ -71,7 +72,8 @@ def upload():
     ctx = get_user_context()
 
     # Get the max upload size based on user's plan
-    max_size_mb = replane_client.get("max-upload-size-mb", context=ctx)
+    user_client = replane.with_context(ctx)
+    max_size_mb = user_client.configs["max-upload-size-mb"]
 
     # Check content length
     content_length = request.content_length or 0
@@ -102,7 +104,8 @@ def get_items():
     ctx = get_user_context()
 
     # Get rate limit for this user
-    rate_limit = replane_client.get("rate-limit", context=ctx)
+    user_client = replane.with_context(ctx)
+    rate_limit = user_client.configs["rate-limit"]
 
     # In a real app, you'd implement actual rate limiting here
     # This just shows the configured limit
@@ -126,14 +129,15 @@ def get_items():
 def get_config():
     """Debug endpoint to view current config values."""
     ctx = get_user_context()
+    user_client = replane.with_context(ctx)
 
     return jsonify(
         {
             "context": ctx,
             "configs": {
-                "new-dashboard-enabled": replane_client.get("new-dashboard-enabled", context=ctx),
-                "rate-limit": replane_client.get("rate-limit", context=ctx),
-                "max-upload-size-mb": replane_client.get("max-upload-size-mb", context=ctx),
+                "new-dashboard-enabled": user_client.configs["new-dashboard-enabled"],
+                "rate-limit": user_client.configs["rate-limit"],
+                "max-upload-size-mb": user_client.configs["max-upload-size-mb"],
             },
         }
     )

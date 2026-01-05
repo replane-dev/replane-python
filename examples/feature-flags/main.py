@@ -11,23 +11,23 @@ BASE_URL = "https://your-replane-server.com"
 SDK_KEY = "your_sdk_key_here"
 
 
-def demo_basic_feature_flags(client: Replane):
+def demo_basic_feature_flags(replane: Replane):
     """Basic boolean feature flags."""
     print("\n=== Basic Feature Flags ===")
 
     # Simple boolean flag
-    dark_mode = client.get("dark-mode-enabled", default=False)
+    dark_mode = replane.configs.get("dark-mode-enabled", False)
     print(f"Dark mode: {dark_mode}")
 
     # Feature flag for new UI
-    new_checkout = client.get("new-checkout-flow", default=False)
+    new_checkout = replane.configs.get("new-checkout-flow", False)
     if new_checkout:
         print("Using new checkout flow")
     else:
         print("Using legacy checkout flow")
 
 
-def demo_user_targeting(client: Replane):
+def demo_user_targeting(replane: Replane):
     """Feature flags with user targeting."""
     print("\n=== User Targeting ===")
 
@@ -40,71 +40,52 @@ def demo_user_targeting(client: Replane):
 
     for user in users:
         # Beta feature for specific users
-        beta_enabled = client.get(
-            "beta-feature",
-            context={"user_id": user["user_id"]},
-            default=False,
-        )
+        user_client = replane.with_context({"user_id": user["user_id"]})
+        beta_enabled = user_client.configs.get("beta-feature", False)
         print(f"{user['name']}: beta feature = {beta_enabled}")
 
 
-def demo_plan_based_limits(client: Replane):
+def demo_plan_based_limits(replane: Replane):
     """Dynamic limits based on subscription plan."""
     print("\n=== Plan-Based Limits ===")
 
     plans = ["free", "starter", "pro", "enterprise"]
 
     for plan in plans:
+        plan_client = replane.with_context({"plan": plan})
+
         # Rate limits vary by plan
-        rate_limit = client.get(
-            "api-rate-limit",
-            context={"plan": plan},
-            default=100,
-        )
+        rate_limit = plan_client.configs.get("api-rate-limit", 100)
 
         # Storage limits vary by plan
-        storage_gb = client.get(
-            "storage-limit-gb",
-            context={"plan": plan},
-            default=5,
-        )
+        storage_gb = plan_client.configs.get("storage-limit-gb", 5)
 
         # Max team members vary by plan
-        max_members = client.get(
-            "max-team-members",
-            context={"plan": plan},
-            default=1,
-        )
+        max_members = plan_client.configs.get("max-team-members", 1)
 
         print(
             f"{plan:12} | Rate: {rate_limit:5}/hr | Storage: {storage_gb:4}GB | Members: {max_members}"
         )
 
 
-def demo_regional_features(client: Replane):
+def demo_regional_features(replane: Replane):
     """Features enabled for specific regions."""
     print("\n=== Regional Features ===")
 
     regions = ["US", "EU", "APAC", "LATAM"]
 
     for region in regions:
-        # Payment methods available in region
-        apple_pay = client.get(
-            "apple-pay-enabled",
-            context={"region": region},
-            default=False,
-        )
+        region_client = replane.with_context({"region": region})
 
-        crypto = client.get(
-            "crypto-payments-enabled",
-            context={"region": region},
-            default=False,
-        )
+        # Payment methods available in region
+        apple_pay = region_client.configs.get("apple-pay-enabled", False)
+
+        crypto = region_client.configs.get("crypto-payments-enabled", False)
 
         print(f"{region}: Apple Pay = {apple_pay}, Crypto = {crypto}")
 
 
-def demo_gradual_rollout(client: Replane):
+def demo_gradual_rollout(replane: Replane):
     """Gradual feature rollout (percentage-based)."""
     print("\n=== Gradual Rollout ===")
 
@@ -116,11 +97,8 @@ def demo_gradual_rollout(client: Replane):
 
     enabled_count = 0
     for user_id in users:
-        enabled = client.get(
-            "experimental-feature",
-            context={"user_id": user_id},
-            default=False,
-        )
+        user_client = replane.with_context({"user_id": user_id})
+        enabled = user_client.configs.get("experimental-feature", False)
         if enabled:
             enabled_count += 1
         print(f"{user_id}: {enabled}")
@@ -128,38 +106,28 @@ def demo_gradual_rollout(client: Replane):
     print(f"\nEnabled for {enabled_count}/{len(users)} users ({enabled_count * 10}%)")
 
 
-def demo_environment_configs(client: Replane):
+def demo_environment_configs(replane: Replane):
     """Environment-specific configuration."""
     print("\n=== Environment Configs ===")
 
     environments = ["development", "staging", "production"]
 
     for env in environments:
+        env_client = replane.with_context({"environment": env})
+
         # Log level varies by environment
-        log_level = client.get(
-            "log-level",
-            context={"environment": env},
-            default="INFO",
-        )
+        log_level = env_client.configs.get("log-level", "INFO")
 
         # Debug mode
-        debug = client.get(
-            "debug-mode",
-            context={"environment": env},
-            default=False,
-        )
+        debug = env_client.configs.get("debug-mode", False)
 
         # Cache TTL
-        cache_ttl = client.get(
-            "cache-ttl-seconds",
-            context={"environment": env},
-            default=300,
-        )
+        cache_ttl = env_client.configs.get("cache-ttl-seconds", 300)
 
         print(f"{env:12} | Log: {log_level:5} | Debug: {debug} | Cache TTL: {cache_ttl}s")
 
 
-def demo_complex_conditions(client: Replane):
+def demo_complex_conditions(replane: Replane):
     """Features with multiple conditions."""
     print("\n=== Complex Conditions ===")
 
@@ -172,17 +140,14 @@ def demo_complex_conditions(client: Replane):
     ]
 
     for ctx in test_cases:
-        discount = client.get(
-            "vip-discount-percent",
-            context=ctx,
-            default=0,
-        )
+        ctx_client = replane.with_context(ctx)
+        discount = ctx_client.configs.get("vip-discount-percent", 0)
         print(
             f"Plan: {ctx['plan']:10} LTV: ${ctx['ltv']:5} Region: {ctx['region']} -> {discount}% discount"
         )
 
 
-def demo_real_time_updates(client: Replane):
+def demo_real_time_updates(replane: Replane):
     """Subscribe to real-time config changes."""
     print("\n=== Real-Time Updates ===")
 
@@ -190,7 +155,7 @@ def demo_real_time_updates(client: Replane):
         print(f"Config '{name}' changed to: {config.value}")
 
     # Subscribe to all changes
-    unsubscribe = client.subscribe(on_config_change)
+    unsubscribe = replane.subscribe(on_config_change)
 
     print("Subscribed to config changes.")
     print("Change configs in Replane dashboard to see updates.")
@@ -202,7 +167,7 @@ def demo_real_time_updates(client: Replane):
         while True:
             # Periodically show current values
             time.sleep(10)
-            print(f"Current 'feature-flag' value: {client.get('feature-flag', default='N/A')}")
+            print(f"Current 'feature-flag' value: {replane.configs.get('feature-flag', 'N/A')}")
     except KeyboardInterrupt:
         print("\nUnsubscribing...")
         unsubscribe()
@@ -229,17 +194,17 @@ def main():
             "vip-discount-percent": 0,
         },
         debug=False,
-    ) as client:
-        demo_basic_feature_flags(client)
-        demo_user_targeting(client)
-        demo_plan_based_limits(client)
-        demo_regional_features(client)
-        demo_gradual_rollout(client)
-        demo_environment_configs(client)
-        demo_complex_conditions(client)
+    ) as replane:
+        demo_basic_feature_flags(replane)
+        demo_user_targeting(replane)
+        demo_plan_based_limits(replane)
+        demo_regional_features(replane)
+        demo_gradual_rollout(replane)
+        demo_environment_configs(replane)
+        demo_complex_conditions(replane)
 
         # Uncomment to test real-time updates:
-        # demo_real_time_updates(client)
+        # demo_real_time_updates(replane)
 
 
 if __name__ == "__main__":

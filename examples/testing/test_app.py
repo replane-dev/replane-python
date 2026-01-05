@@ -14,7 +14,7 @@ class TestBasicUsage:
 
     def test_simple_config_values(self):
         """Test reading simple config values."""
-        client = create_test_client(
+        replane = create_test_client(
             {
                 "rate-limit": 100,
                 "feature-enabled": True,
@@ -22,32 +22,32 @@ class TestBasicUsage:
             }
         )
 
-        assert client.get("rate-limit") == 100
-        assert client.get("feature-enabled") is True
-        assert client.get("api-version") == "v2"
+        assert replane.configs["rate-limit"] == 100
+        assert replane.configs["feature-enabled"] is True
+        assert replane.configs["api-version"] == "v2"
 
     def test_default_values(self):
         """Test that default values work correctly."""
-        client = create_test_client({})
+        replane = create_test_client({})
 
         # Should return default when config doesn't exist
-        assert client.get("missing-config", default=42) == 42
-        assert client.get("missing-flag", default=False) is False
+        assert replane.configs.get("missing-config", 42) == 42
+        assert replane.configs.get("missing-flag", False) is False
 
     def test_context_manager(self):
         """Test using the client as a context manager."""
-        with create_test_client({"key": "value"}) as client:
-            assert client.get("key") == "value"
+        with create_test_client({"key": "value"}) as replane:
+            assert replane.configs["key"] == "value"
 
     def test_set_config_dynamically(self):
         """Test setting configs after creation."""
-        client = create_test_client()
+        replane = create_test_client()
 
-        client.set("feature-enabled", True)
-        assert client.get("feature-enabled") is True
+        replane.set("feature-enabled", True)
+        assert replane.configs["feature-enabled"] is True
 
-        client.set("feature-enabled", False)
-        assert client.get("feature-enabled") is False
+        replane.set("feature-enabled", False)
+        assert replane.configs["feature-enabled"] is False
 
 
 class TestWithOverrides:
@@ -55,10 +55,10 @@ class TestWithOverrides:
 
     def test_plan_based_overrides(self):
         """Test overrides based on user plan."""
-        client = InMemoryReplaneClient()
+        replane = InMemoryReplaneClient()
 
         # Set up config with overrides
-        client.set_config(
+        replane.set_config(
             "rate-limit",
             value=100,  # Default for free users
             overrides=[
@@ -80,15 +80,15 @@ class TestWithOverrides:
         )
 
         # Test different plans
-        assert client.get("rate-limit", context={"plan": "free"}) == 100
-        assert client.get("rate-limit", context={"plan": "premium"}) == 1000
-        assert client.get("rate-limit", context={"plan": "enterprise"}) == 10000
+        assert replane.with_context({"plan": "free"}).configs["rate-limit"] == 100
+        assert replane.with_context({"plan": "premium"}).configs["rate-limit"] == 1000
+        assert replane.with_context({"plan": "enterprise"}).configs["rate-limit"] == 10000
 
     def test_user_targeting(self):
         """Test overrides targeting specific users."""
-        client = InMemoryReplaneClient()
+        replane = InMemoryReplaneClient()
 
-        client.set_config(
+        replane.set_config(
             "new-feature",
             value=False,
             overrides=[
@@ -107,17 +107,17 @@ class TestWithOverrides:
         )
 
         # Beta users get the feature
-        assert client.get("new-feature", context={"user_id": "user-1"}) is True
-        assert client.get("new-feature", context={"user_id": "user-2"}) is True
+        assert replane.with_context({"user_id": "user-1"}).configs["new-feature"] is True
+        assert replane.with_context({"user_id": "user-2"}).configs["new-feature"] is True
 
         # Regular users don't
-        assert client.get("new-feature", context={"user_id": "user-999"}) is False
+        assert replane.with_context({"user_id": "user-999"}).configs["new-feature"] is False
 
     def test_multiple_conditions(self):
         """Test overrides with multiple conditions (AND logic)."""
-        client = InMemoryReplaneClient()
+        replane = InMemoryReplaneClient()
 
-        client.set_config(
+        replane.set_config(
             "special-offer",
             value=False,
             overrides=[
@@ -133,9 +133,9 @@ class TestWithOverrides:
         )
 
         # Both conditions must match
-        assert client.get("special-offer", context={"plan": "premium", "region": "US"}) is True
-        assert client.get("special-offer", context={"plan": "premium", "region": "EU"}) is False
-        assert client.get("special-offer", context={"plan": "free", "region": "US"}) is False
+        assert replane.with_context({"plan": "premium", "region": "US"}).configs["special-offer"] is True
+        assert replane.with_context({"plan": "premium", "region": "EU"}).configs["special-offer"] is False
+        assert replane.with_context({"plan": "free", "region": "US"}).configs["special-offer"] is False
 
 
 class TestApplicationCode:
@@ -143,8 +143,8 @@ class TestApplicationCode:
 
     def test_get_rate_limit(self):
         """Test the get_rate_limit function."""
-        client = InMemoryReplaneClient()
-        client.set_config(
+        replane = InMemoryReplaneClient()
+        replane.set_config(
             "rate-limit",
             value=100,
             overrides=[
@@ -158,20 +158,20 @@ class TestApplicationCode:
             ],
         )
 
-        assert get_rate_limit(client, "free") == 100
-        assert get_rate_limit(client, "premium") == 500
+        assert get_rate_limit(replane, "free") == 100
+        assert get_rate_limit(replane, "premium") == 500
 
     def test_is_feature_enabled(self):
         """Test the is_feature_enabled function."""
-        client = create_test_client({"dark-mode": True, "beta-feature": False})
+        replane = create_test_client({"dark-mode": True, "beta-feature": False})
 
-        assert is_feature_enabled(client, "dark-mode") is True
-        assert is_feature_enabled(client, "beta-feature") is False
-        assert is_feature_enabled(client, "unknown-feature") is False  # Uses default
+        assert is_feature_enabled(replane, "dark-mode") is True
+        assert is_feature_enabled(replane, "beta-feature") is False
+        assert is_feature_enabled(replane, "unknown-feature") is False  # Uses default
 
     def test_calculate_discount(self):
         """Test the calculate_discount function."""
-        client = create_test_client(
+        replane = create_test_client(
             {
                 "base-discount": 10,
                 "premium-bonus": 15,
@@ -179,21 +179,21 @@ class TestApplicationCode:
         )
 
         # Regular user gets base discount
-        assert calculate_discount(client, "user-1", is_premium=False) == 10
+        assert calculate_discount(replane, "user-1", is_premium=False) == 10
 
         # Premium user gets base + bonus
-        assert calculate_discount(client, "user-1", is_premium=True) == 25
+        assert calculate_discount(replane, "user-1", is_premium=True) == 25
 
 
 class TestOrderService:
     """Testing a service class with Replane."""
 
     @pytest.fixture
-    def replane_client(self):
+    def replane(self):
         """Create a test client for the OrderService."""
-        client = InMemoryReplaneClient()
+        replane = InMemoryReplaneClient()
 
-        client.set_config(
+        replane.set_config(
             "max-items-per-order",
             value=10,
             overrides=[
@@ -207,7 +207,7 @@ class TestOrderService:
             ],
         )
 
-        client.set_config(
+        replane.set_config(
             "express-shipping-enabled",
             value=False,
             overrides=[
@@ -221,27 +221,27 @@ class TestOrderService:
             ],
         )
 
-        return client
+        return replane
 
-    def test_max_items_free_plan(self, replane_client):
+    def test_max_items_free_plan(self, replane):
         """Test max items for free plan."""
-        service = OrderService(replane_client)
+        service = OrderService(replane)
         assert service.get_max_items_per_order("free") == 10
 
-    def test_max_items_premium_plan(self, replane_client):
+    def test_max_items_premium_plan(self, replane):
         """Test max items for premium plan."""
-        service = OrderService(replane_client)
+        service = OrderService(replane)
         assert service.get_max_items_per_order("premium") == 50
 
-    def test_express_shipping_available_regions(self, replane_client):
+    def test_express_shipping_available_regions(self, replane):
         """Test express shipping in available regions."""
-        service = OrderService(replane_client)
+        service = OrderService(replane)
         assert service.is_express_shipping_available("US") is True
         assert service.is_express_shipping_available("CA") is True
 
-    def test_express_shipping_unavailable_regions(self, replane_client):
+    def test_express_shipping_unavailable_regions(self, replane):
         """Test express shipping in unavailable regions."""
-        service = OrderService(replane_client)
+        service = OrderService(replane)
         assert service.is_express_shipping_available("EU") is False
         assert service.is_express_shipping_available("APAC") is False
 
@@ -251,16 +251,16 @@ class TestSubscriptions:
 
     def test_subscribe_to_changes(self):
         """Test subscribing to config changes."""
-        client = create_test_client({"value": 1})
+        replane = create_test_client({"value": 1})
         changes = []
 
         # Subscribe to all changes
-        unsubscribe = client.subscribe(lambda name, config: changes.append((name, config.value)))
+        unsubscribe = replane.subscribe(lambda name, config: changes.append((name, config.value)))
 
         # Make some changes
-        client.set("value", 2)
-        client.set("value", 3)
-        client.set("other", "x")
+        replane.set("value", 2)
+        replane.set("value", 3)
+        replane.set("other", "x")
 
         assert len(changes) == 3
         assert changes[0] == ("value", 2)
@@ -269,19 +269,19 @@ class TestSubscriptions:
 
         # Unsubscribe and verify no more notifications
         unsubscribe()
-        client.set("value", 4)
+        replane.set("value", 4)
         assert len(changes) == 3  # No new changes recorded
 
     def test_subscribe_to_specific_config(self):
         """Test subscribing to a specific config."""
-        client = create_test_client()
+        replane = create_test_client()
         changes = []
 
         # Subscribe to only "feature" config
-        client.subscribe_config("feature", lambda config: changes.append(config.value))
+        replane.subscribe_config("feature", lambda config: changes.append(config.value))
 
-        client.set("feature", True)
-        client.set("other", "ignored")
-        client.set("feature", False)
+        replane.set("feature", True)
+        replane.set("other", "ignored")
+        replane.set("feature", False)
 
         assert changes == [True, False]

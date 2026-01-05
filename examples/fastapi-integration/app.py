@@ -98,7 +98,7 @@ class UploadResponse(BaseModel):
 @app.middleware("http")
 async def check_maintenance_mode(request: Request, call_next):
     if replane_client and request.url.path != "/health":
-        maintenance = replane_client.get("maintenance-mode", default=False)
+        maintenance = replane_client.configs.get("maintenance-mode", False)
         if maintenance:
             return HTTPException(
                 status_code=503,
@@ -113,7 +113,8 @@ async def index(
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Homepage with feature flag check."""
-    new_dashboard = replane.get("new-dashboard-enabled", context=ctx)
+    user_client = replane.with_context(ctx)
+    new_dashboard = user_client.configs["new-dashboard-enabled"]
 
     if new_dashboard:
         return WelcomeResponse(message="Welcome to the new dashboard!", version="v2")
@@ -127,7 +128,8 @@ async def get_items(
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """List items with configurable rate limiting."""
-    rate_limit = replane.get("rate-limit", context=ctx)
+    user_client = replane.with_context(ctx)
+    rate_limit = user_client.configs["rate-limit"]
 
     items = [
         {"id": 1, "name": "Item 1"},
@@ -149,7 +151,8 @@ async def upload(
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Upload endpoint with configurable size limit."""
-    max_size_mb = replane.get("max-upload-size-mb", context=ctx)
+    user_client = replane.with_context(ctx)
+    max_size_mb = user_client.configs["max-upload-size-mb"]
 
     content_length = request.headers.get("content-length", 0)
     max_bytes = max_size_mb * 1024 * 1024
@@ -172,13 +175,14 @@ async def get_config(
     ctx: Annotated[dict, Depends(get_user_context)],
 ):
     """Debug endpoint to view current config values."""
+    user_client = replane.with_context(ctx)
     return ConfigResponse(
         context=ctx,
         configs={
-            "new-dashboard-enabled": replane.get("new-dashboard-enabled", context=ctx),
-            "rate-limit": replane.get("rate-limit", context=ctx),
-            "max-upload-size-mb": replane.get("max-upload-size-mb", context=ctx),
-            "maintenance-mode": replane.get("maintenance-mode", context=ctx),
+            "new-dashboard-enabled": user_client.configs["new-dashboard-enabled"],
+            "rate-limit": user_client.configs["rate-limit"],
+            "max-upload-size-mb": user_client.configs["max-upload-size-mb"],
+            "maintenance-mode": user_client.configs["maintenance-mode"],
         },
     )
 

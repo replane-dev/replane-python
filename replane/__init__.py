@@ -9,8 +9,8 @@ Quick start (sync):
     >>> with Replane(
     ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
-    ... ) as client:
-    ...     if client.get("new-feature-enabled"):
+    ... ) as replane:
+    ...     if replane.configs["new-feature-enabled"]:
     ...         enable_new_feature()
 
 Quick start (async):
@@ -19,8 +19,9 @@ Quick start (async):
     >>> async with AsyncReplane(
     ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
-    ... ) as client:
-    ...     rate_limit = client.get("rate-limit", context={"plan": user.plan})
+    ... ) as replane:
+    ...     user_client = replane.with_context({"plan": user.plan})
+    ...     rate_limit = user_client.configs["rate-limit"]
 
 With generated TypedDict types for better type safety (recommended):
     >>> from replane import Replane
@@ -29,14 +30,14 @@ With generated TypedDict types for better type safety (recommended):
     >>> with Replane[Configs](
     ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
-    ... ) as client:
-    ...     config = client.configs["my-feature"]  # fully typed dict access
+    ... ) as replane:
+    ...     config = replane.configs["my-feature"]  # fully typed dict access
     ...     print(config["enabled"])  # type-safe property access
 
 For testing:
     >>> from replane.testing import create_test_client
     >>>
-    >>> client = create_test_client({
+    >>> replane = create_test_client({
     ...     "feature-enabled": True,
     ...     "rate-limit": 100,
     ... })

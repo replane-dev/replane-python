@@ -17,10 +17,10 @@ def mock_server():
     Example:
         def test_something(mock_server):
             mock_server.send_init([{"name": "feature", "value": True}])
-            client = Replane(base_url=mock_server.url, sdk_key="test")
-            client.connect()
-            assert client.configs["feature"] is True
-            client.close()
+            replane = Replane(base_url=mock_server.url, sdk_key="test")
+            replane.connect()
+            assert replane.configs["feature"] is True
+            replane.close()
     """
     server = MockSSEServer(port=0)  # Pick available port
     server.start()

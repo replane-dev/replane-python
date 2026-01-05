@@ -56,7 +56,7 @@ class AsyncConfigAccessor(Generic[ConfigsT]):
     since it only reads from the local cache without any I/O.
 
     Example:
-        >>> config_value = client.configs["my-feature-flag"]
+        >>> config_value = replane.configs["my-feature-flag"]
         >>> print(config_value["enabled"])  # Access typed properties
     """
 
@@ -167,9 +167,9 @@ class ContextualAsyncReplane(Generic[ConfigsT]):
     ``AsyncReplane``, but with merged context/defaults.
 
     Example:
-        >>> async with AsyncReplane(...) as client:
+        >>> async with AsyncReplane(...) as replane:
         ...     # Create a scoped client for a specific user
-        ...     user_client = client.with_context({"user_id": "123", "plan": "premium"})
+        ...     user_client = replane.with_context({"user_id": "123", "plan": "premium"})
         ...     rate_limit = user_client.configs["rate-limit"]  # Uses merged context
         ...
         ...     # Create a scoped client with additional defaults
@@ -291,19 +291,19 @@ class AsyncReplane(Generic[ConfigsT]):
         >>> async with AsyncReplane(
         ...     base_url="https://replane.example.com",
         ...     sdk_key="rp_...",
-        ... ) as client:
-        ...     value = client.get("feature-flag")
+        ... ) as replane:
+        ...     value = replane.configs["feature-flag"]
 
     Or with manual lifecycle:
-        >>> client = AsyncReplane(...)
-        >>> await client.connect()
-        >>> value = client.get("feature-flag")
-        >>> await client.close()
+        >>> replane = AsyncReplane(...)
+        >>> await replane.connect()
+        >>> value = replane.configs["feature-flag"]
+        >>> await replane.close()
 
     With generated types for better type safety (recommended):
         >>> from replane_types import Configs
-        >>> async with AsyncReplane[Configs](...) as client:
-        ...     config = client.configs["feature-flag"]  # fully typed
+        >>> async with AsyncReplane[Configs](...) as replane:
+        ...     config = replane.configs["feature-flag"]  # fully typed
         ...     print(config["enabled"])  # type-safe property access
     """
 
@@ -519,7 +519,7 @@ class AsyncReplane(Generic[ConfigsT]):
         since it only reads from the local cache without any I/O.
 
         Example:
-            >>> config = client.configs["my-feature-flag"]
+            >>> config = replane.configs["my-feature-flag"]
             >>> print(config["enabled"])
 
         Returns:
@@ -543,14 +543,14 @@ class AsyncReplane(Generic[ConfigsT]):
         This is useful for creating scoped clients for specific users or requests:
 
         Example:
-            >>> async with AsyncReplane(...) as client:
+            >>> async with AsyncReplane(...) as replane:
             ...     # Create a scoped client for a specific user
-            ...     user_client = client.with_context({
+            ...     user_client = replane.with_context({
             ...         "user_id": user.id,
             ...         "plan": user.plan,
             ...     })
             ...     # All operations use the merged context
-            ...     rate_limit = user_client.get("rate-limit")
+            ...     rate_limit = user_client.configs["rate-limit"]
             ...     settings = user_client.configs["app-settings"]
 
         Args:
@@ -574,14 +574,14 @@ class AsyncReplane(Generic[ConfigsT]):
         This is useful for providing fallback values for specific use cases:
 
         Example:
-            >>> async with AsyncReplane(...) as client:
+            >>> async with AsyncReplane(...) as replane:
             ...     # Create a scoped client with additional defaults
-            ...     safe_client = client.with_defaults({
+            ...     safe_client = replane.with_defaults({
             ...         "timeout": 30,
             ...         "max-retries": 3,
             ...     })
             ...     # Returns 30 if "timeout" is not configured
-            ...     timeout = safe_client.get("timeout")
+            ...     timeout = safe_client.configs["timeout"]
 
         Args:
             defaults: Additional defaults to use when configs are not found.

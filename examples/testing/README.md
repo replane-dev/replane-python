@@ -114,7 +114,7 @@ def test_subscriptions():
 Quick way to create a test client with initial values:
 
 ```python
-client = create_test_client({
+replane = create_test_client({
     "feature": True,
     "limit": 100,
 })
@@ -124,8 +124,8 @@ client = create_test_client({
 
 Full-featured test client with support for:
 
-- Setting simple values: `client.set("key", value)`
-- Setting configs with overrides: `client.set_config("key", value, overrides=[...])`
+- Setting simple values: `replane.set("key", value)`
+- Setting configs with overrides: `replane.set_config("key", value, overrides=[...])`
 - Default context: `InMemoryReplaneClient(context={"env": "test"})`
 - Subscriptions: `client.subscribe(callback)`
 - Context manager: `with client: ...`

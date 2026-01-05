@@ -25,70 +25,68 @@ def main():
         },
         # Optional: enable debug logging
         debug=True,
-    ) as client:
+    ) as replane:
         # Read a boolean feature flag
-        is_feature_enabled = client.get("feature-enabled")
+        is_feature_enabled = replane.configs["feature-enabled"]
         print(f"Feature enabled: {is_feature_enabled}")
 
         # Read a numeric config
-        max_items = client.get("max-items")
+        max_items = replane.configs["max-items"]
         print(f"Max items: {max_items}")
 
         # Read with context for override evaluation
-        rate_limit = client.get(
-            "rate-limit",
-            context={"plan": "premium", "user_id": "user-123"},
-        )
+        user_client = replane.with_context({"plan": "premium", "user_id": "user-123"})
+        rate_limit = user_client.configs["rate-limit"]
         print(f"Rate limit: {rate_limit}")
 
         # Read with default value if config doesn't exist
-        timeout = client.get("request-timeout", default=30)
+        timeout = replane.configs.get("request-timeout", 30)
         print(f"Timeout: {timeout}")
 
 
 def example_manual_lifecycle():
     """Example showing manual connect/close lifecycle."""
-    client = Replane(
+    replane = Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     )
 
     try:
         # Connect and wait for initial configs
-        client.connect(wait=True)
+        replane.connect(wait=True)
 
         # Now you can read configs
-        value = client.get("my-config")
+        value = replane.configs["my-config"]
         print(f"Config value: {value}")
 
     finally:
         # Always close the client when done
-        client.close()
+        replane.close()
 
 
 def example_non_blocking_connect():
     """Example showing non-blocking connection."""
-    client = Replane(
+    replane = Replane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
         defaults={"my-config": "default-value"},
     )
 
     # Start connection without waiting
-    client.connect(wait=False)
+    replane.connect(wait=False)
 
     # Can use default values immediately
-    value = client.get("my-config")
+    value = replane.configs.get("my-config", "default-value")
     print(f"Initial value (may be default): {value}")
 
     # Later, wait for initialization if needed
-    client.wait_for_init()
+    replane.wait_for_init()
 
     # Now we have fresh values from server
-    value = client.get("my-config")
+    value = replane.configs["my-config"]
     print(f"Server value: {value}")
 
-    client.close()
+    replane.close()
 
 
 if __name__ == "__main__":

@@ -27,24 +27,22 @@ async def main():
         },
         # Optional: enable debug logging
         debug=True,
-    ) as client:
+    ) as replane:
         # Read a boolean feature flag (sync - reads from local cache)
-        is_feature_enabled = client.get("feature-enabled")
+        is_feature_enabled = replane.configs["feature-enabled"]
         print(f"Feature enabled: {is_feature_enabled}")
 
         # Read a numeric config
-        max_items = client.get("max-items")
+        max_items = replane.configs["max-items"]
         print(f"Max items: {max_items}")
 
         # Read with context for override evaluation
-        rate_limit = client.get(
-            "rate-limit",
-            context={"plan": "premium", "user_id": "user-123"},
-        )
+        user_client = replane.with_context({"plan": "premium", "user_id": "user-123"})
+        rate_limit = user_client.configs["rate-limit"]
         print(f"Rate limit: {rate_limit}")
 
         # Read with default value if config doesn't exist
-        timeout = client.get("request-timeout", default=30)
+        timeout = replane.configs.get("request-timeout", 30)
         print(f"Timeout: {timeout}")
 
         # Keep running to receive real-time updates
@@ -53,7 +51,7 @@ async def main():
             while True:
                 await asyncio.sleep(5)
                 # Re-read to see any updates
-                current_value = client.get("feature-enabled")
+                current_value = replane.configs["feature-enabled"]
                 print(f"Current feature-enabled value: {current_value}")
         except KeyboardInterrupt:
             print("\nStopping...")
@@ -61,22 +59,22 @@ async def main():
 
 async def example_manual_lifecycle():
     """Example showing manual connect/close lifecycle."""
-    client = AsyncReplane(
+    replane = AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
     )
 
     try:
         # Connect and wait for initial configs
-        await client.connect(wait=True)
+        await replane.connect(wait=True)
 
         # Now you can read configs
-        value = client.get("my-config")
+        value = replane.configs["my-config"]
         print(f"Config value: {value}")
 
     finally:
         # Always close the client when done
-        await client.close()
+        await replane.close()
 
 
 async def example_with_subscriptions():
@@ -84,18 +82,18 @@ async def example_with_subscriptions():
     async with AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
-    ) as client:
+    ) as replane:
         # Subscribe to all config changes
         def on_any_change(name, config):
             print(f"Config '{name}' changed to: {config.value}")
 
-        unsubscribe_all = client.subscribe(on_any_change)
+        unsubscribe_all = replane.subscribe(on_any_change)
 
         # Subscribe to a specific config
         def on_feature_change(config):
             print(f"Feature flag updated: {config.value}")
 
-        unsubscribe_feature = client.subscribe_config("feature-enabled", on_feature_change)
+        unsubscribe_feature = replane.subscribe_config("feature-enabled", on_feature_change)
 
         # Keep running to receive updates
         print("Listening for changes...")
@@ -111,7 +109,7 @@ async def example_async_callback():
     async with AsyncReplane(
         base_url=BASE_URL,
         sdk_key=SDK_KEY,
-    ) as client:
+    ) as replane:
         # Async callbacks are supported
         async def on_change(name, config):
             print(f"Config '{name}' changed")
@@ -119,7 +117,7 @@ async def example_async_callback():
             await asyncio.sleep(0.1)
             print(f"Processed change for '{name}'")
 
-        client.subscribe(on_change)
+        replane.subscribe(on_change)
 
         await asyncio.sleep(60)
 
