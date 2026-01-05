@@ -176,7 +176,9 @@ class TestSetConfigWithOverrides:
 
         assert client.with_context({"plan": "free", "region": "us"}).configs["rate-limit"] == 100
         assert client.with_context({"plan": "premium", "region": "eu"}).configs["rate-limit"] == 100
-        assert client.with_context({"plan": "premium", "region": "us"}).configs["rate-limit"] == 10000
+        assert (
+            client.with_context({"plan": "premium", "region": "us"}).configs["rate-limit"] == 10000
+        )
 
     def test_multiple_overrides_first_wins(self):
         client = InMemoryReplaneClient()
@@ -246,4 +248,3 @@ class TestCreateTestClient:
     def test_with_default_context(self):
         client = create_test_client({"x": 1}, context={"env": "test"})
         assert client._context == {"env": "test"}
-
