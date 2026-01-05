@@ -71,11 +71,30 @@ await replane.close()
 
 ### Type-safe with Generated Types
 
-Generate TypedDict types from the Replane dashboard for full type safety:
+Generate TypedDict types from the Replane dashboard for full type safety.
+
+Example generated `replane_types.py`:
+
+```python
+# replane_types.py - Generated from Replane dashboard
+from typing import List, TypedDict
+
+class AppSettings(TypedDict):
+    maxUploadSizeMb: float
+    allowedFileTypes: List[str]
+    maintenanceMode: bool
+
+class Configs(TypedDict):
+    app-settings: AppSettings
+    rate-limit: int
+    feature-enabled: bool
+```
+
+Usage with generated types:
 
 ```python
 from replane import Replane
-from replane_types import Configs  # Generated from dashboard
+from replane_types import Configs
 
 with Replane[Configs](
     base_url="https://replane.example.com",
