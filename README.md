@@ -39,16 +39,16 @@ from replane import Replane
 with Replane(
     base_url="https://cloud.replane.dev",  # or your self-hosted URL
     sdk_key="rp_...",
-) as client:
+) as replane:
     # Get a simple config value
-    rate_limit = client.configs["rate-limit"]
+    rate_limit = replane.configs["rate-limit"]
 
     # Get with context for override evaluation
-    user_client = client.with_context({"user_id": user.id, "plan": user.plan})
+    user_client = replane.with_context({"user_id": user.id, "plan": user.plan})
     feature_enabled = user_client.configs["new-feature"]
 
     # Get with fallback default
-    timeout = client.configs.get("request-timeout", 30)
+    timeout = replane.configs.get("request-timeout", 30)
 ```
 
 ### Asynchronous Client
@@ -61,12 +61,12 @@ from replane import AsyncReplane
 async with AsyncReplane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
-) as client:
+) as replane:
     # Access configs from local cache
-    rate_limit = client.configs["rate-limit"]
+    rate_limit = replane.configs["rate-limit"]
 
     # With context
-    enabled = client.with_context({"plan": "premium"}).configs["feature"]
+    enabled = replane.with_context({"plan": "premium"}).configs["feature"]
 ```
 
 ### Type-Safe with Generated Types (Recommended)
@@ -81,25 +81,25 @@ from replane_types import Configs  # Generated from Replane dashboard
 with Replane[Configs](
     base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
-) as client:
+) as replane:
     # Access configs with dictionary-style notation
-    settings = client.configs["app-settings"]
+    settings = replane.configs["app-settings"]
 
     # Full type safety - IDE knows the structure of settings
     print(settings["maxUploadSizeMb"])
     print(settings["allowedFileTypes"])
 
     # Check if config exists
-    if "feature-flag" in client.configs:
-        flag = client.configs["feature-flag"]
+    if "feature-flag" in replane.configs:
+        flag = replane.configs["feature-flag"]
 
     # Safe access with default
-    timeout = client.configs.get("timeout", 30)
+    timeout = replane.configs.get("timeout", 30)
 ```
 
 The `.configs` property provides:
 
-- **Dictionary-style access** with `client.configs["config-name"]`
+- **Dictionary-style access** with `replane.configs["config-name"]`
 - **Type inference** when using generated TypedDict types
 - **Override evaluation** using the default context
 - **Familiar dict methods**: `.get()`, `.keys()`, `in` operator
@@ -109,7 +109,7 @@ The `.configs` property provides:
 Both clients accept the same configuration:
 
 ```python
-client = Replane(
+replane = Replane(
     base_url="https://replane.example.com",
     sdk_key="rp_...",
 
@@ -153,7 +153,7 @@ context = {
 }
 
 # Overrides are evaluated locally using with_context()
-value = client.with_context(context).configs["feature-flag"]
+value = replane.with_context(context).configs["feature-flag"]
 ```
 
 ### Scoped Clients with `with_context()`
@@ -164,9 +164,9 @@ Create scoped clients for specific users or requests using `with_context()`:
 with Replane(
     base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
-) as client:
+) as replane:
     # Create a scoped client for a specific user
-    user_client = client.with_context({
+    user_client = replane.with_context({
         "user_id": user.id,
         "plan": user.plan,
     })
@@ -189,9 +189,9 @@ Create scoped clients with fallback values using `with_defaults()`:
 with Replane(
     base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
-) as client:
+) as replane:
     # Create a client with fallback defaults
-    safe_client = client.with_defaults({
+    safe_client = replane.with_defaults({
         "timeout": 30,
         "max-retries": 3,
     })
@@ -200,7 +200,7 @@ with Replane(
     timeout = safe_client.configs["timeout"]  # 30 if not configured
 
     # Chain with with_context() for both features
-    user_client = client.with_context({"plan": "premium"}).with_defaults({
+    user_client = replane.with_context({"plan": "premium"}).with_defaults({
         "rate-limit": 1000,
     })
 ```
@@ -214,20 +214,20 @@ Explicit defaults in `.configs.get()` take precedence over scoped defaults.
 ```python
 # Server config has 10% rollout based on user_id
 # Same user always gets same result (deterministic hashing)
-enabled = client.with_context({"user_id": user.id}).configs["new-checkout"]
+enabled = replane.with_context({"user_id": user.id}).configs["new-checkout"]
 ```
 
 **Plan-based features**:
 
 ```python
-max_items = client.with_context({"plan": user.plan}).configs["max-items"]
+max_items = replane.with_context({"plan": user.plan}).configs["max-items"]
 # Returns different values for free/pro/enterprise plans
 ```
 
 **Geographic targeting**:
 
 ```python
-content = client.with_context({"country": request.country}).configs["homepage-banner"]
+content = replane.with_context({"country": request.country}).configs["homepage-banner"]
 ```
 
 ## Subscribing to Changes
@@ -239,13 +239,13 @@ React to config changes in real-time:
 def on_any_change(name: str, config):
     print(f"Config {name} changed to {config.value}")
 
-unsubscribe = client.subscribe(on_any_change)
+unsubscribe = replane.subscribe(on_any_change)
 
 # Subscribe to specific config
 def on_feature_change(config):
     update_feature_state(config.value)
 
-unsubscribe_feature = client.subscribe_config("my-feature", on_feature_change)
+unsubscribe_feature = replane.subscribe_config("my-feature", on_feature_change)
 
 # Later: stop receiving updates
 unsubscribe()
@@ -258,7 +258,7 @@ For async clients, callbacks can be async:
 async def on_change(name: str, config):
     await notify_services(name, config.value)
 
-client.subscribe(on_change)
+replane.subscribe(on_change)
 ```
 
 ## Error Handling
@@ -273,7 +273,7 @@ from replane import (
 )
 
 try:
-    value = client.configs["my-config"]
+    value = replane.configs["my-config"]
 except KeyError as e:
     print(f"Config not found: {e}")
 except TimeoutError as e:
@@ -292,16 +292,16 @@ Use the in-memory client for unit tests:
 from replane.testing import create_test_client, InMemoryReplaneClient
 
 # Simple usage
-client = create_test_client({
+replane = create_test_client({
     "feature-enabled": True,
     "rate-limit": 100,
 })
 
-assert client.configs["feature-enabled"] is True
+assert replane.configs["feature-enabled"] is True
 
 # With overrides
-client = InMemoryReplaneClient()
-client.set_config(
+replane = InMemoryReplaneClient()
+replane.set_config(
     "feature",
     value=False,
     overrides=[{
@@ -313,8 +313,8 @@ client.set_config(
     }],
 )
 
-assert client.with_context({"plan": "free"}).configs["feature"] is False
-assert client.with_context({"plan": "pro"}).configs["feature"] is True
+assert replane.with_context({"plan": "free"}).configs["feature"] is False
+assert replane.with_context({"plan": "pro"}).configs["feature"] is True
 ```
 
 ### Pytest Fixture Example
@@ -341,20 +341,20 @@ If you prefer not to use context managers:
 
 ```python
 # Sync
-client = Replane(base_url="...", sdk_key="...")
-client.connect()  # Blocks until initialized
+replane = Replane(base_url="...", sdk_key="...")
+replane.connect()  # Blocks until initialized
 try:
-    value = client.configs["config"]
+    value = replane.configs["config"]
 finally:
-    client.close()
+    replane.close()
 
 # Async
-client = AsyncReplane(base_url="...", sdk_key="...")
-await client.connect()
+replane = AsyncReplane(base_url="...", sdk_key="...")
+await replane.connect()
 try:
-    value = client.configs["config"]
+    value = replane.configs["config"]
 finally:
-    await client.close()
+    await replane.close()
 ```
 
 ## Framework Integration
@@ -366,24 +366,24 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from replane import AsyncReplane
 
-client: AsyncReplane | None = None
+_replane: AsyncReplane | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global client
-    client = AsyncReplane(
+    global _replane
+    _replane = AsyncReplane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
-    await client.connect()
+    await _replane.connect()
     yield
-    await client.close()
+    await _replane.close()
 
 app = FastAPI(lifespan=lifespan)
 
 def get_replane() -> AsyncReplane:
-    assert client is not None
-    return client
+    assert _replane is not None
+    return _replane
 
 @app.get("/items")
 async def get_items(replane: AsyncReplane = Depends(get_replane)):
@@ -398,20 +398,20 @@ from flask import Flask, g
 from replane import Replane
 
 app = Flask(__name__)
-replane_client: Replane | None = None
+_replane: Replane | None = None
 
 @app.before_first_request
 def init_replane():
-    global replane_client
-    replane_client = Replane(
+    global _replane
+    _replane = Replane(
         base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
-    replane_client.connect()
+    _replane.connect()
 
 @app.route("/items")
 def get_items():
-    max_items = replane_client.configs["max-items"]
+    max_items = _replane.configs["max-items"]
     return {"max_items": max_items}
 ```
 
