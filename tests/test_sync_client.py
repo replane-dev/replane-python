@@ -1658,33 +1658,31 @@ class TestReplaneClientId:
 
     def test_unique_replane_client_id_per_client_instance(self, mock_server: MockSSEServer):
         """Each client instance gets a unique replaneClientId."""
-        mock_server.send_init(
-            [
-                create_config(
-                    "feature",
-                    "default",
-                    overrides=[
-                        create_override(
-                            "50-percent-rollout",
-                            "rollout-value",
-                            [
-                                {
-                                    "operator": "segmentation",
-                                    "property": "replaneClientId",
-                                    "fromPercentage": 0,
-                                    "toPercentage": 50,
-                                    "seed": "test-seed",
-                                }
-                            ],
-                        ),
+        config = create_config(
+            "feature",
+            "default",
+            overrides=[
+                create_override(
+                    "50-percent-rollout",
+                    "rollout-value",
+                    [
+                        {
+                            "operator": "segmentation",
+                            "property": "replaneClientId",
+                            "fromPercentage": 0,
+                            "toPercentage": 50,
+                            "seed": "test-seed",
+                        }
                     ],
                 ),
-            ]
+            ],
         )
 
         # Create multiple clients and check they get different segmentation results
         results = []
         for _ in range(10):
+            # Each client connection needs its own init event
+            mock_server.send_init([config])
             with Replane(
                 base_url=mock_server.url,
                 sdk_key="rp_test_key",

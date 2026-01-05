@@ -118,6 +118,8 @@ exclude = [
 [[tool.mypy.overrides]]
 module = "tests.*"
 strict_optional = false
+# Generic classes (Replane, InMemoryReplaneClient) don't require type parameters in tests
+disable_error_code = ["var-annotated"]
 
 [tool.pytest.ini_options]
 testpaths = "tests/"
