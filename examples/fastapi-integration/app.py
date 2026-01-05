@@ -72,6 +72,11 @@ def get_user_context(
     }
 
 
+# Define reusable dependency types (recommended FastAPI pattern)
+Replane = Annotated[AsyncReplane, Depends(get_replane)]
+UserContext = Annotated[dict, Depends(get_user_context)]
+
+
 # Response models
 class WelcomeResponse(BaseModel):
     message: str
@@ -108,10 +113,7 @@ async def check_maintenance_mode(request: Request, call_next):
 
 
 @app.get("/", response_model=WelcomeResponse)
-async def index(
-    replane: Annotated[AsyncReplane, Depends(get_replane)],
-    ctx: Annotated[dict, Depends(get_user_context)],
-):
+async def index(replane: Replane, ctx: UserContext):
     """Homepage with feature flag check."""
     user_client = replane.with_context(ctx)
     new_dashboard = user_client.configs["new-dashboard-enabled"]
@@ -123,10 +125,7 @@ async def index(
 
 
 @app.get("/api/items", response_model=ItemsResponse)
-async def get_items(
-    replane: Annotated[AsyncReplane, Depends(get_replane)],
-    ctx: Annotated[dict, Depends(get_user_context)],
-):
+async def get_items(replane: Replane, ctx: UserContext):
     """List items with configurable rate limiting."""
     user_client = replane.with_context(ctx)
     rate_limit = user_client.configs["rate-limit"]
@@ -145,11 +144,7 @@ async def get_items(
 
 
 @app.post("/api/upload", response_model=UploadResponse)
-async def upload(
-    request: Request,
-    replane: Annotated[AsyncReplane, Depends(get_replane)],
-    ctx: Annotated[dict, Depends(get_user_context)],
-):
+async def upload(request: Request, replane: Replane, ctx: UserContext):
     """Upload endpoint with configurable size limit."""
     user_client = replane.with_context(ctx)
     max_size_mb = user_client.configs["max-upload-size-mb"]
@@ -170,10 +165,7 @@ async def upload(
 
 
 @app.get("/api/config", response_model=ConfigResponse)
-async def get_config(
-    replane: Annotated[AsyncReplane, Depends(get_replane)],
-    ctx: Annotated[dict, Depends(get_user_context)],
-):
+async def get_config(replane: Replane, ctx: UserContext):
     """Debug endpoint to view current config values."""
     user_client = replane.with_context(ctx)
     return ConfigResponse(

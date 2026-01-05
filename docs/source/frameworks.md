@@ -10,6 +10,8 @@ FastAPI's async nature makes it a perfect fit for the async Replane client.
 
 ```python
 from contextlib import asynccontextmanager
+from typing import Annotated
+
 from fastapi import FastAPI, Depends
 from replane import AsyncReplane
 
@@ -35,8 +37,11 @@ def get_replane() -> AsyncReplane:
     assert _replane is not None
     return _replane
 
+# Define reusable dependency type
+Replane = Annotated[AsyncReplane, Depends(get_replane)]
+
 @app.get("/items")
-async def get_items(replane: AsyncReplane = Depends(get_replane)):
+async def get_items(replane: Replane):
     max_items = replane.configs["max-items-per-page"]
     return {"max_items": max_items}
 ```
@@ -47,10 +52,7 @@ async def get_items(replane: AsyncReplane = Depends(get_replane)):
 from fastapi import Request
 
 @app.get("/features")
-async def get_features(
-    request: Request,
-    replane: AsyncReplane = Depends(get_replane),
-):
+async def get_features(request: Request, replane: Replane):
     # Build context from request/user
     user_client = replane.with_context({
         "user_id": request.state.user.id,
@@ -73,7 +75,7 @@ from replane._async import ContextualAsyncReplane
 
 def get_replane_with_context(
     request: Request,
-    replane: AsyncReplane = Depends(get_replane),
+    replane: Replane,
 ) -> ContextualAsyncReplane:
     context = {}
     if hasattr(request.state, "user"):
@@ -81,10 +83,12 @@ def get_replane_with_context(
         context["plan"] = request.state.user.plan
     return replane.with_context(context)
 
+ReplaneWithContext = Annotated[ContextualAsyncReplane, Depends(get_replane_with_context)]
+
 @app.get("/dashboard")
-async def dashboard(config: ContextualAsyncReplane = Depends(get_replane_with_context)):
+async def dashboard(replane: ReplaneWithContext):
     # Context is automatically included
-    show_analytics = config.configs["show-analytics"]
+    show_analytics = replane.configs["show-analytics"]
     return {"show_analytics": show_analytics}
 ```
 

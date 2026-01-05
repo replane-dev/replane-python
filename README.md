@@ -383,6 +383,8 @@ finally:
 
 ```python
 from contextlib import asynccontextmanager
+from typing import Annotated
+
 from fastapi import FastAPI, Depends
 from replane import AsyncReplane
 
@@ -405,8 +407,11 @@ def get_replane() -> AsyncReplane:
     assert _replane is not None
     return _replane
 
+# Define reusable dependency type
+Replane = Annotated[AsyncReplane, Depends(get_replane)]
+
 @app.get("/items")
-async def get_items(replane: AsyncReplane = Depends(get_replane)):
+async def get_items(replane: Replane):
     max_items = replane.with_context({"plan": "free"}).configs["max-items"]
     return {"max_items": max_items}
 ```
