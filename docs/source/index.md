@@ -32,11 +32,6 @@ with Replane(
 Or without context manager:
 
 ```python
-# Credentials in constructor
-replane = Replane(base_url="...", sdk_key="...")
-replane.connect()
-
-# Or in connect()
 replane = Replane()
 replane.connect(base_url="...", sdk_key="...")
 

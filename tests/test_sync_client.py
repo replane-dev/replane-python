@@ -117,6 +117,97 @@ class TestSyncClientConnection:
             client.close()
 
 
+class TestSyncClientCredentials:
+    """Test sdk_key and base_url can be provided in constructor or connect()."""
+
+    def test_credentials_in_constructor(self, mock_server: MockSSEServer):
+        """Credentials provided in constructor work normally."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = Replane(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        try:
+            client.connect()
+            assert client.configs["feature"] is True
+        finally:
+            client.close()
+
+    def test_credentials_in_connect(self, mock_server: MockSSEServer):
+        """Credentials can be provided in connect() instead of constructor."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = Replane()
+        try:
+            client.connect(
+                base_url=mock_server.url,
+                sdk_key="rp_test_key",
+            )
+            assert client.configs["feature"] is True
+        finally:
+            client.close()
+
+    def test_connect_credentials_override_constructor(self, mock_server: MockSSEServer):
+        """Credentials in connect() override those in constructor."""
+        mock_server.send_init([create_config("feature", True)])
+
+        # Provide wrong URL in constructor, correct one in connect()
+        client = Replane(
+            base_url="http://wrong-url.invalid",
+            sdk_key="rp_wrong_key",
+        )
+        try:
+            client.connect(
+                base_url=mock_server.url,
+                sdk_key="rp_test_key",
+            )
+            assert client.configs["feature"] is True
+        finally:
+            client.close()
+
+    def test_partial_credentials_in_constructor_and_connect(
+        self, mock_server: MockSSEServer
+    ):
+        """base_url in constructor, sdk_key in connect() works."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = Replane(base_url=mock_server.url)
+        try:
+            client.connect(sdk_key="rp_test_key")
+            assert client.configs["feature"] is True
+        finally:
+            client.close()
+
+    def test_missing_base_url_raises_valueerror(self):
+        """Missing base_url raises ValueError."""
+        client = Replane(sdk_key="rp_test_key")
+
+        with pytest.raises(ValueError) as exc_info:
+            client.connect()
+
+        assert "base_url is required" in str(exc_info.value)
+
+    def test_missing_sdk_key_raises_valueerror(self):
+        """Missing sdk_key raises ValueError."""
+        client = Replane(base_url="http://example.com")
+
+        with pytest.raises(ValueError) as exc_info:
+            client.connect()
+
+        assert "sdk_key is required" in str(exc_info.value)
+
+    def test_missing_both_credentials_raises_valueerror(self):
+        """Missing both credentials raises ValueError."""
+        client = Replane()
+
+        with pytest.raises(ValueError) as exc_info:
+            client.connect()
+
+        # Should fail on first missing credential
+        assert "is required" in str(exc_info.value)
+
+
 class TestSyncClientConfigRetrieval:
     """Test config retrieval scenarios."""
 

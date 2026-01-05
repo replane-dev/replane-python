@@ -117,6 +117,99 @@ class TestAsyncClientConnection:
             await client.close()
 
 
+class TestAsyncClientCredentials:
+    """Test sdk_key and base_url can be provided in constructor or connect()."""
+
+    async def test_credentials_in_constructor(self, mock_server: MockSSEServer):
+        """Credentials provided in constructor work normally."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = AsyncReplane(
+            base_url=mock_server.url,
+            sdk_key="rp_test_key",
+        )
+        try:
+            await client.connect()
+            assert client.configs["feature"] is True
+        finally:
+            await client.close()
+
+    async def test_credentials_in_connect(self, mock_server: MockSSEServer):
+        """Credentials can be provided in connect() instead of constructor."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = AsyncReplane()
+        try:
+            await client.connect(
+                base_url=mock_server.url,
+                sdk_key="rp_test_key",
+            )
+            assert client.configs["feature"] is True
+        finally:
+            await client.close()
+
+    async def test_connect_credentials_override_constructor(
+        self, mock_server: MockSSEServer
+    ):
+        """Credentials in connect() override those in constructor."""
+        mock_server.send_init([create_config("feature", True)])
+
+        # Provide wrong URL in constructor, correct one in connect()
+        client = AsyncReplane(
+            base_url="http://wrong-url.invalid",
+            sdk_key="rp_wrong_key",
+        )
+        try:
+            await client.connect(
+                base_url=mock_server.url,
+                sdk_key="rp_test_key",
+            )
+            assert client.configs["feature"] is True
+        finally:
+            await client.close()
+
+    async def test_partial_credentials_in_constructor_and_connect(
+        self, mock_server: MockSSEServer
+    ):
+        """base_url in constructor, sdk_key in connect() works."""
+        mock_server.send_init([create_config("feature", True)])
+
+        client = AsyncReplane(base_url=mock_server.url)
+        try:
+            await client.connect(sdk_key="rp_test_key")
+            assert client.configs["feature"] is True
+        finally:
+            await client.close()
+
+    async def test_missing_base_url_raises_valueerror(self):
+        """Missing base_url raises ValueError."""
+        client = AsyncReplane(sdk_key="rp_test_key")
+
+        with pytest.raises(ValueError) as exc_info:
+            await client.connect()
+
+        assert "base_url is required" in str(exc_info.value)
+
+    async def test_missing_sdk_key_raises_valueerror(self):
+        """Missing sdk_key raises ValueError."""
+        client = AsyncReplane(base_url="http://example.com")
+
+        with pytest.raises(ValueError) as exc_info:
+            await client.connect()
+
+        assert "sdk_key is required" in str(exc_info.value)
+
+    async def test_missing_both_credentials_raises_valueerror(self):
+        """Missing both credentials raises ValueError."""
+        client = AsyncReplane()
+
+        with pytest.raises(ValueError) as exc_info:
+            await client.connect()
+
+        # Should fail on first missing credential
+        assert "is required" in str(exc_info.value)
+
+
 class TestAsyncClientConfigRetrieval:
     """Test config retrieval scenarios."""
 
