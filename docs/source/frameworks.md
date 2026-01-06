@@ -42,7 +42,7 @@ Replane = Annotated[AsyncReplane, Depends(get_replane)]
 
 @app.get("/items")
 async def get_items(replane: Replane):
-    max_items = replane.configs["max-items-per-page"]
+    max_items = replane.configs["max_items_per_page"]
     return {"max_items": max_items}
 ```
 
@@ -60,8 +60,8 @@ async def get_features(request: Request, replane: Replane):
     })
 
     return {
-        "dark_mode": user_client.configs["dark-mode-enabled"],
-        "beta_features": user_client.configs["beta-features"],
+        "dark_mode": user_client.configs["dark_mode_enabled"],
+        "beta_features": user_client.configs["beta_features"],
     }
 ```
 
@@ -88,7 +88,7 @@ ReplaneWithContext = Annotated[ContextualAsyncReplane, Depends(get_replane_with_
 @app.get("/dashboard")
 async def dashboard(replane: ReplaneWithContext):
     # Context is automatically included
-    show_analytics = replane.configs["show-analytics"]
+    show_analytics = replane.configs["show_analytics"]
     return {"show_analytics": show_analytics}
 ```
 
@@ -120,7 +120,7 @@ def get_replane() -> Replane:
 @app.route("/items")
 def get_items():
     replane = get_replane()
-    max_items = replane.configs["max-items-per-page"]
+    max_items = replane.configs["max_items_per_page"]
     return {"max_items": max_items}
 ```
 
@@ -151,7 +151,7 @@ def create_app():
 @app.route("/features")
 def features():
     replane = current_app.replane
-    return {"enabled": replane.configs["feature-enabled"]}
+    return {"enabled": replane.configs["feature_enabled"]}
 ```
 
 ### Flask Extension Pattern

@@ -115,7 +115,7 @@ curl http://localhost:8000/health/
 REPLANE_BASE_URL = os.environ.get("REPLANE_BASE_URL", "...")
 REPLANE_SDK_KEY = os.environ.get("REPLANE_SDK_KEY", "...")
 REPLANE_DEFAULTS = {
-    "rate-limit": 100,
+    "rate_limit": 100,
     "new-dashboard-enabled": False,
 }
 ```
@@ -142,7 +142,7 @@ from demo.replane_client import get_replane
 
 replane = get_replane()
 user_client = replane.with_context({"user_id": "123"})
-value = user_client.configs["feature-flag"]
+value = user_client.configs["feature_flag"]
 ```
 
 ### 4. Middleware (`demo/middleware.py`)
@@ -161,7 +161,7 @@ class MyView(View):
         client = get_replane()
         ctx = request.replane_context
 
-        if client.get("new-feature", context=ctx):
+        if client.get("new_feature", context=ctx):
             return JsonResponse({"feature": "enabled"})
         return JsonResponse({"feature": "disabled"})
 ```

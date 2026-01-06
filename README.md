@@ -41,14 +41,14 @@ with Replane(
     sdk_key="rp_...",
 ) as replane:
     # Get a simple config value
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
 
     # Get with context for override evaluation
     user_client = replane.with_context({"user_id": user.id, "plan": user.plan})
-    feature_enabled = user_client.configs["new-feature"]
+    feature_enabled = user_client.configs["new_feature"]
 
     # Get with fallback default
-    timeout = replane.configs.get("request-timeout", 30)
+    timeout = replane.configs.get("request_timeout", 30)
 ```
 
 ### Asynchronous Client
@@ -63,7 +63,7 @@ async with AsyncReplane(
     sdk_key="rp_...",
 ) as replane:
     # Access configs from local cache
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
 
     # With context
     enabled = replane.with_context({"plan": "premium"}).configs["feature"]
@@ -89,9 +89,9 @@ replane.connect(
 )
 
 # Use configs
-rate_limit = replane.configs["rate-limit"]
+rate_limit = replane.configs["rate_limit"]
 user_client = replane.with_context({"user_id": "123"})
-feature = user_client.configs["feature-flag"]
+feature = user_client.configs["feature_flag"]
 
 # Don't forget to close when done
 replane.close()
@@ -111,15 +111,15 @@ with Replane[Configs](
     sdk_key="rp_...",
 ) as replane:
     # Access configs with dictionary-style notation
-    settings = replane.configs["app-settings"]
+    settings = replane.configs["app_settings"]
 
     # Full type safety - IDE knows the structure of settings
     print(settings["max_upload_size_mb"])
     print(settings["allowed_file_types"])
 
     # Check if config exists
-    if "feature-flag" in replane.configs:
-        flag = replane.configs["feature-flag"]
+    if "feature_flag" in replane.configs:
+        flag = replane.configs["feature_flag"]
 
     # Safe access with default
     timeout = replane.configs.get("timeout", 30)
@@ -127,7 +127,7 @@ with Replane[Configs](
 
 The `.configs` property provides:
 
-- **Dictionary-style access** with `replane.configs["config-name"]`
+- **Dictionary-style access** with `replane.configs["config_name"]`
 - **Type inference** when using generated TypedDict types
 - **Override evaluation** using the default context
 - **Familiar dict methods**: `.get()`, `.keys()`, `in` operator
@@ -146,12 +146,12 @@ replane = Replane(
 
     # Default values used if server is unavailable during init
     defaults={
-        "rate-limit": 100,
-        "feature-enabled": False,
+        "rate_limit": 100,
+        "feature_enabled": False,
     },
 
     # Configs that must exist (raises error if missing)
-    required=["rate-limit", "feature-enabled"],
+    required=["rate_limit", "feature_enabled"],
 
     # Timeouts in milliseconds
     request_timeout_ms=2000,
@@ -181,7 +181,7 @@ context = {
 }
 
 # Overrides are evaluated locally using with_context()
-value = replane.with_context(context).configs["feature-flag"]
+value = replane.with_context(context).configs["feature_flag"]
 ```
 
 ### Scoped Clients with `with_context()`
@@ -200,8 +200,8 @@ with Replane(
     })
 
     # All operations use the merged context
-    rate_limit = user_client.configs["rate-limit"]
-    settings = user_client.configs["app-settings"]
+    rate_limit = user_client.configs["rate_limit"]
+    settings = user_client.configs["app_settings"]
 
     # Can be chained for additional context
     request_client = user_client.with_context({"region": request.region})
@@ -221,7 +221,7 @@ with Replane(
     # Create a client with fallback defaults
     safe_client = replane.with_defaults({
         "timeout": 30,
-        "max-retries": 3,
+        "max_retries": 3,
     })
 
     # Returns the default if config doesn't exist
@@ -229,7 +229,7 @@ with Replane(
 
     # Chain with with_context() for both features
     user_client = replane.with_context({"plan": "premium"}).with_defaults({
-        "rate-limit": 1000,
+        "rate_limit": 1000,
     })
 ```
 
@@ -242,20 +242,20 @@ Explicit defaults in `.configs.get()` take precedence over scoped defaults.
 ```python
 # Server config has 10% rollout based on user_id
 # Same user always gets same result (deterministic hashing)
-enabled = replane.with_context({"user_id": user.id}).configs["new-checkout"]
+enabled = replane.with_context({"user_id": user.id}).configs["new_checkout"]
 ```
 
 **Plan-based features**:
 
 ```python
-max_items = replane.with_context({"plan": user.plan}).configs["max-items"]
+max_items = replane.with_context({"plan": user.plan}).configs["max_items"]
 # Returns different values for free/pro/enterprise plans
 ```
 
 **Geographic targeting**:
 
 ```python
-content = replane.with_context({"country": request.country}).configs["homepage-banner"]
+content = replane.with_context({"country": request.country}).configs["homepage_banner"]
 ```
 
 ## Subscribing to Changes
@@ -273,7 +273,7 @@ unsubscribe = replane.subscribe(on_any_change)
 def on_feature_change(config):
     update_feature_state(config.value)
 
-unsubscribe_feature = replane.subscribe_config("my-feature", on_feature_change)
+unsubscribe_feature = replane.subscribe_config("my_feature", on_feature_change)
 
 # Later: stop receiving updates
 unsubscribe()
@@ -301,7 +301,7 @@ from replane import (
 )
 
 try:
-    value = replane.configs["my-config"]
+    value = replane.configs["my_config"]
 except KeyError as e:
     print(f"Config not found: {e}")
 except TimeoutError as e:
@@ -321,11 +321,11 @@ from replane.testing import create_test_client, InMemoryReplaneClient
 
 # Simple usage
 replane = create_test_client({
-    "feature-enabled": True,
-    "rate-limit": 100,
+    "feature_enabled": True,
+    "rate_limit": 100,
 })
 
-assert replane.configs["feature-enabled"] is True
+assert replane.configs["feature_enabled"] is True
 
 # With overrides
 replane = InMemoryReplaneClient()
@@ -354,13 +354,13 @@ from replane.testing import create_test_client
 @pytest.fixture
 def replane_client():
     return create_test_client({
-        "feature-flags": {"dark-mode": True, "new-ui": False},
-        "rate-limits": {"default": 100, "premium": 1000},
+        "feature_flags": {"dark_mode": True, "new-ui": False},
+        "rate_limits": {"default": 100, "premium": 1000},
     })
 
 def test_feature_flag(replane_client):
-    flags = replane_client.configs["feature-flags"]
-    assert flags["dark-mode"] is True
+    flags = replane_client.configs["feature_flags"]
+    assert flags["dark_mode"] is True
 ```
 
 ## Manual Lifecycle Management
@@ -420,7 +420,7 @@ Replane = Annotated[AsyncReplane, Depends(get_replane)]
 
 @app.get("/items")
 async def get_items(replane: Replane):
-    max_items = replane.with_context({"plan": "free"}).configs["max-items"]
+    max_items = replane.with_context({"plan": "free"}).configs["max_items"]
     return {"max_items": max_items}
 ```
 
@@ -444,7 +444,7 @@ def init_replane():
 
 @app.route("/items")
 def get_items():
-    max_items = _replane.configs["max-items"]
+    max_items = _replane.configs["max_items"]
     return {"max_items": max_items}
 ```
 

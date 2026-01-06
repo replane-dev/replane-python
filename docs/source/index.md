@@ -24,11 +24,11 @@ with Replane(
     sdk_key="rp_...",
 ) as replane:
     # Get a config value
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
 
     # Get with context for override evaluation
     user_client = replane.with_context({"user_id": user.id, "plan": user.plan})
-    feature_enabled = user_client.configs["new-feature"]
+    feature_enabled = user_client.configs["new_feature"]
 ```
 
 Or without context manager:
@@ -37,7 +37,7 @@ Or without context manager:
 replane = Replane()
 replane.connect(base_url="...", sdk_key="...")
 
-rate_limit = replane.configs["rate-limit"]
+rate_limit = replane.configs["rate_limit"]
 
 replane.close()
 ```
@@ -52,10 +52,10 @@ async with AsyncReplane(
     base_url="https://cloud.replane.dev",
     sdk_key="rp_...",
 ) as replane:
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
 
     user_client = replane.with_context({"user_id": user.id})
-    feature_enabled = user_client.configs["new-feature"]
+    feature_enabled = user_client.configs["new_feature"]
 ```
 
 Or without context manager:
@@ -64,7 +64,7 @@ Or without context manager:
 replane = AsyncReplane()
 await replane.connect(base_url="...", sdk_key="...")
 
-rate_limit = replane.configs["rate-limit"]
+rate_limit = replane.configs["rate_limit"]
 
 await replane.close()
 ```
@@ -85,9 +85,9 @@ class AppSettings(TypedDict):
     maintenance_mode: bool
 
 class Configs(TypedDict):
-    app-settings: AppSettings
-    rate-limit: int
-    feature-enabled: bool
+    app_settings: AppSettings
+    rate_limit: int
+    feature_enabled: bool
 ```
 
 Usage with generated types:
@@ -101,7 +101,7 @@ with Replane[Configs](
     sdk_key="rp_...",
 ) as replane:
     # Dictionary-style access with full type safety
-    settings = replane.configs["app-settings"]
+    settings = replane.configs["app_settings"]
     print(settings["max_upload_size_mb"])  # IDE knows the type
     print(settings["allowed_file_types"])  # Autocomplete works
 ```

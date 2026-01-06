@@ -11,14 +11,14 @@ from replane.testing import InMemoryReplaneClient
 
 # Create with initial configs
 replane = InMemoryReplaneClient({
-    "feature-enabled": True,
-    "rate-limit": 100,
+    "feature_enabled": True,
+    "rate_limit": 100,
     "api-version": "v2",
 })
 
 # Use like the real client
-assert replane.configs["feature-enabled"] is True
-assert replane.configs["rate-limit"] == 100
+assert replane.configs["feature_enabled"] is True
+assert replane.configs["rate_limit"] == 100
 ```
 
 ## Using create_test_client
@@ -29,8 +29,8 @@ For convenience, use the `create_test_client` helper:
 from replane.testing import create_test_client
 
 replane = create_test_client({
-    "feature-flags": {"dark-mode": True, "new-ui": False},
-    "limits": {"max-items": 50, "max-users": 10},
+    "feature_flags": {"dark-mode": True, "new-ui": False},
+    "limits": {"max_items": 50, "max_users": 10},
 })
 ```
 
@@ -45,15 +45,15 @@ from replane.testing import create_test_client
 @pytest.fixture
 def replane():
     return create_test_client({
-        "feature-enabled": True,
-        "rate-limit": 100,
+        "feature_enabled": True,
+        "rate_limit": 100,
     })
 
 def test_feature_flag(replane):
-    assert replane.configs["feature-enabled"] is True
+    assert replane.configs["feature_enabled"] is True
 
 def test_rate_limit(replane):
-    assert replane.configs["rate-limit"] == 100
+    assert replane.configs["rate_limit"] == 100
 ```
 
 ## Testing with Overrides
@@ -66,7 +66,7 @@ from replane.testing import InMemoryReplaneClient
 def test_plan_based_rate_limits():
     replane = InMemoryReplaneClient()
     replane.set_config(
-        "rate-limit",
+        "rate_limit",
         value=100,  # Base value for free users
         overrides=[
             {
@@ -81,14 +81,14 @@ def test_plan_based_rate_limits():
 
     # Free user gets base value
     free_client = replane.with_context({"plan": "free"})
-    assert free_client.configs["rate-limit"] == 100
+    assert free_client.configs["rate_limit"] == 100
 
     # Premium users get override value
     pro_client = replane.with_context({"plan": "pro"})
-    assert pro_client.configs["rate-limit"] == 1000
+    assert pro_client.configs["rate_limit"] == 1000
     
     enterprise_client = replane.with_context({"plan": "enterprise"})
-    assert enterprise_client.configs["rate-limit"] == 1000
+    assert enterprise_client.configs["rate_limit"] == 1000
 ```
 
 ## Testing Multiple Conditions
@@ -218,14 +218,14 @@ class FeatureService:
 
     def is_feature_enabled(self, user_id: str) -> bool:
         user_client = self.replane.with_context({"user_id": user_id})
-        return user_client.configs["new-feature"]
+        return user_client.configs["new_feature"]
 
 # test_your_module.py
 from replane.testing import create_test_client
 from your_module import FeatureService
 
 def test_feature_service():
-    replane = create_test_client({"new-feature": True})
+    replane = create_test_client({"new_feature": True})
     service = FeatureService(replane)
 
     assert service.is_feature_enabled("user-123") is True

@@ -23,16 +23,16 @@ with Replane(
     sdk_key="rp_...",
 ) as replane:
     # Get a simple config value
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
     print(f"Rate limit: {rate_limit}")
 
     # Get with context for override evaluation
     user_client = replane.with_context({"user_id": "user-123", "plan": "premium"})
-    feature_enabled = user_client.configs["new-feature"]
+    feature_enabled = user_client.configs["new_feature"]
     print(f"Feature enabled: {feature_enabled}")
 
     # Get with fallback default
-    timeout = replane.configs.get("request-timeout", 30)
+    timeout = replane.configs.get("request_timeout", 30)
     print(f"Timeout: {timeout}")
 ```
 
@@ -49,7 +49,7 @@ async def main():
         sdk_key="rp_...",
     ) as replane:
         # configs access is sync - it reads from local cache
-        rate_limit = replane.configs["rate-limit"]
+        rate_limit = replane.configs["rate_limit"]
 
         # With context
         premium_client = replane.with_context({"plan": "premium"})
@@ -86,9 +86,9 @@ replane.connect(
 )
 
 try:
-    rate_limit = replane.configs["rate-limit"]
+    rate_limit = replane.configs["rate_limit"]
     user_client = replane.with_context({"user_id": "123"})
-    feature = user_client.configs["feature-flag"]
+    feature = user_client.configs["feature_flag"]
 finally:
     replane.close()
 ```
@@ -99,19 +99,19 @@ Configs in Replane can be any JSON-serializable value:
 
 ```python
 # Boolean (feature flags)
-dark_mode = replane.configs["dark-mode-enabled"]  # True/False
+dark_mode = replane.configs["dark_mode_enabled"]  # True/False
 
 # Number (limits, thresholds)
-max_items = replane.configs["max-items-per-page"]  # 50
+max_items = replane.configs["max_items_per_page"]  # 50
 
 # String
-api_version = replane.configs["api-version"]  # "v2"
+api_version = replane.configs["api_version"]  # "v2"
 
 # Object
-settings = replane.configs["app-settings"]  # {"theme": "dark", "lang": "en"}
+settings = replane.configs["app_settings"]  # {"theme": "dark", "lang": "en"}
 
 # Array
-allowed_origins = replane.configs["cors-origins"]  # ["localhost", "example.com"]
+allowed_origins = replane.configs["cors_origins"]  # ["localhost", "example.com"]
 ```
 
 ## Using Context for Overrides
@@ -123,7 +123,7 @@ Context allows you to get different values based on runtime conditions:
 user_client = replane.with_context({"plan": user.subscription_plan})
 
 # Different rate limits per plan
-rate_limit = user_client.configs["rate-limit"]
+rate_limit = user_client.configs["rate_limit"]
 # Returns 100 for "free", 1000 for "pro", 10000 for "enterprise"
 
 # Feature flags per user
@@ -131,7 +131,7 @@ beta_client = replane.with_context({
     "user_id": user.id,
     "is_beta_tester": user.is_beta,
 })
-show_beta = beta_client.configs["show-beta-features"]
+show_beta = beta_client.configs["show_beta_features"]
 ```
 
 Context is evaluated locally - your data never leaves your application.
@@ -152,7 +152,7 @@ unsubscribe = replane.subscribe(on_config_change)
 def on_rate_limit_change(config):
     update_rate_limiter(config.value)
 
-unsubscribe_rate = replane.subscribe_config("rate-limit", on_rate_limit_change)
+unsubscribe_rate = replane.subscribe_config("rate_limit", on_rate_limit_change)
 
 # Later, stop receiving updates
 unsubscribe()
@@ -176,7 +176,7 @@ try:
         base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     ) as replane:
-        value = replane.configs["my-config"]
+        value = replane.configs["my_config"]
 except KeyError as e:
     print(f"Config not found: {e}")
 except TimeoutError as e:

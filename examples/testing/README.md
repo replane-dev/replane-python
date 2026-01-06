@@ -48,10 +48,10 @@ from replane.testing import create_test_client
 
 def test_simple():
     client = create_test_client({
-        "feature-enabled": True,
-        "rate-limit": 100,
+        "feature_enabled": True,
+        "rate_limit": 100,
     })
-    assert client.get("feature-enabled") is True
+    assert client.get("feature_enabled") is True
 ```
 
 ### Testing with Overrides
@@ -62,7 +62,7 @@ from replane.testing import InMemoryReplaneClient
 def test_with_overrides():
     client = InMemoryReplaneClient()
     client.set_config(
-        "rate-limit",
+        "rate_limit",
         value=100,  # Default
         overrides=[{
             "name": "premium",
@@ -73,8 +73,8 @@ def test_with_overrides():
         }],
     )
 
-    assert client.get("rate-limit", context={"plan": "free"}) == 100
-    assert client.get("rate-limit", context={"plan": "premium"}) == 1000
+    assert client.get("rate_limit", context={"plan": "free"}) == 100
+    assert client.get("rate_limit", context={"plan": "premium"}) == 1000
 ```
 
 ### Testing Services with Dependency Injection

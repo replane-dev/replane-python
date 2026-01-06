@@ -52,7 +52,7 @@ try:
         base_url="https://cloud.replane.dev",
         sdk_key="rp_...",
     ) as replane:
-        value = replane.configs["my-config"]
+        value = replane.configs["my_config"]
 except KeyError as e:
     print(f"Config not found: {e}")
 except TimeoutError as e:
@@ -91,7 +91,7 @@ Accessing a missing config via bracket notation raises a standard `KeyError`:
 
 ```python
 try:
-    value = replane.configs["nonexistent-config"]
+    value = replane.configs["nonexistent_config"]
 except KeyError as e:
     print(f"Config not found: {e}")
     value = "default"
@@ -124,7 +124,7 @@ from replane import Replane, ConfigNotFoundError
 try:
     with Replane(
         ...,
-        required=["critical-config-1", "critical-config-2"],
+        required=["critical_config-1", "critical_config-2"],
     ) as replane:
         pass
 except ConfigNotFoundError as e:
@@ -280,7 +280,7 @@ except ReplaneError as e:
 ```python
 # Good: specific handling
 try:
-    value = replane.configs["critical-config"]
+    value = replane.configs["critical_config"]
 except KeyError:
     logger.error("Critical config missing!")
     raise  # Re-raise for critical configs

@@ -66,7 +66,7 @@ Different limits based on subscription plan:
 
 ```python
 rate_limit = client.get(
-    "api-rate-limit",
+    "api_rate_limit",
     context={"plan": user.plan},
     default=100,
 )
@@ -141,11 +141,11 @@ unsubscribe = client.subscribe(on_change)
 
 For these examples to work fully, configure the following in your Replane dashboard:
 
-### Example: `api-rate-limit` with plan-based overrides
+### Example: `api_rate_limit` with plan-based overrides
 
 ```json
 {
-  "name": "api-rate-limit",
+  "name": "api_rate_limit",
   "value": 100,
   "overrides": [
     {
@@ -222,7 +222,7 @@ For these examples to work fully, configure the following in your Replane dashbo
 ## Best Practices
 
 1. **Always provide defaults**: Use the `defaults` parameter or `default` in `get()` calls
-2. **Use meaningful config names**: `api-rate-limit` not `limit1`
+2. **Use meaningful config names**: `api_rate_limit` not `limit1`
 3. **Document your context properties**: Keep a list of what context values your app uses
 4. **Test with InMemoryReplaneClient**: See the `testing` example for how to test
 5. **Monitor config changes**: Use subscriptions for logging or analytics

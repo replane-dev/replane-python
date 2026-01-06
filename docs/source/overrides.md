@@ -11,7 +11,7 @@ Each config in Replane has:
 Override rules are evaluated in order. The first matching rule wins.
 
 ```
-Config: "rate-limit"
+Config: "rate_limit"
 ├── Base value: 100
 └── Overrides:
     ├── 1. If plan == "enterprise" → 10000
@@ -25,14 +25,14 @@ Use `with_context()` to evaluate overrides:
 
 ```python
 # Without context - returns base value
-rate_limit = replane.configs["rate-limit"]  # 100
+rate_limit = replane.configs["rate_limit"]  # 100
 
 # With context - evaluates overrides
 pro_client = replane.with_context({"plan": "pro"})
-rate_limit = pro_client.configs["rate-limit"]  # 1000
+rate_limit = pro_client.configs["rate_limit"]  # 1000
 
 enterprise_client = replane.with_context({"plan": "enterprise"})
-rate_limit = enterprise_client.configs["rate-limit"]  # 10000
+rate_limit = enterprise_client.configs["rate_limit"]  # 10000
 ```
 
 ## Context Properties
@@ -115,8 +115,8 @@ Numeric comparisons:
 
 ```python
 # Override: age >= 18
-replane.with_context({"age": 21}).configs["adult-content"]  # Matches
-replane.with_context({"age": 15}).configs["adult-content"]  # Doesn't match
+replane.with_context({"age": 21}).configs["adult_content"]  # Matches
+replane.with_context({"age": 15}).configs["adult_content"]  # Doesn't match
 ```
 
 ### Segmentation (Percentage Rollout)
@@ -126,7 +126,7 @@ Roll out features to a percentage of users:
 ```python
 # Override: 10% of users (based on user_id)
 user_client = replane.with_context({"user_id": "user-123"})
-user_client.configs["new-checkout"]
+user_client.configs["new_checkout"]
 # Deterministic: same user always gets same result
 ```
 
@@ -161,7 +161,7 @@ This design provides:
 
 ```python
 user_client = replane.with_context({"user_id": user.id})
-if user_client.configs["new-dashboard-enabled"]:
+if user_client.configs["new_dashboard_enabled"]:
     return render_new_dashboard()
 else:
     return render_old_dashboard()
@@ -171,7 +171,7 @@ else:
 
 ```python
 plan_client = replane.with_context({"plan": user.plan})
-max_projects = plan_client.configs["max-projects"]
+max_projects = plan_client.configs["max_projects"]
 # free: 3, pro: 10, enterprise: unlimited (-1)
 ```
 
@@ -181,21 +181,21 @@ Configure a 10% rollout in Replane dashboard, then:
 
 ```python
 user_client = replane.with_context({"user_id": user.id})
-use_new_algorithm = user_client.configs["new-recommendation-algorithm"]
+use_new_algorithm = user_client.configs["new_recommendation_algorithm"]
 ```
 
 ### Geographic Targeting
 
 ```python
 geo_client = replane.with_context({"country": request.geo.country})
-banner_content = geo_client.configs["homepage-banner"]
+banner_content = geo_client.configs["homepage_banner"]
 ```
 
 ### A/B Testing
 
 ```python
 user_client = replane.with_context({"user_id": user.id})
-button_color = user_client.configs["checkout-button-color"]
+button_color = user_client.configs["checkout_button_color"]
 # Returns "blue", "green", or "red" based on user's bucket
 ```
 

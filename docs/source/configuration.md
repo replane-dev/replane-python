@@ -16,8 +16,8 @@ replane = Replane(
 
     # Optional
     context={"environment": "production"},
-    defaults={"rate-limit": 100, "feature-enabled": False},
-    required=["rate-limit", "feature-enabled"],
+    defaults={"rate_limit": 100, "feature_enabled": False},
+    required=["rate_limit", "feature_enabled"],
     request_timeout_ms=2000,
     initialization_timeout_ms=5000,
     retry_delay_ms=200,
@@ -80,11 +80,11 @@ replane = Replane(
 )
 
 # This uses the default context
-value = replane.configs["config-name"]
+value = replane.configs["config_name"]
 
 # This merges with default context using with_context()
 user_client = replane.with_context({"user_id": "123"})
-value = user_client.configs["config-name"]
+value = user_client.configs["config_name"]
 # Effective context: {"environment": "production", "region": "us-east", "user_id": "123"}
 ```
 
@@ -99,8 +99,8 @@ Default values used when configs can't be loaded from the server. This is useful
 replane = Replane(
     ...,
     defaults={
-        "rate-limit": 100,
-        "feature-enabled": False,
+        "rate_limit": 100,
+        "feature_enabled": False,
         "max-connections": 10,
     },
 )
@@ -121,7 +121,7 @@ List of config names that must be present after initialization. If any required 
 ```python
 replane = Replane(
     ...,
-    required=["rate-limit", "feature-enabled"],
+    required=["rate_limit", "feature_enabled"],
 )
 # Raises ConfigNotFoundError if either config is missing
 ```
@@ -218,7 +218,7 @@ Example output:
 2024-01-15 10:30:00 [DEBUG] replane: Connecting to SSE: host=cloud.replane.dev, port=443, https=True
 2024-01-15 10:30:00 [DEBUG] replane: Response status: 200 OK
 2024-01-15 10:30:00 [DEBUG] replane: SSE event received: type=init
-2024-01-15 10:30:00 [DEBUG] replane: Loaded config: rate-limit (value=100, overrides=2)
+2024-01-15 10:30:00 [DEBUG] replane: Loaded config: rate_limit (value=100, overrides=2)
 2024-01-15 10:30:00 [DEBUG] replane: Initialization complete: 5 configs loaded
 ```
 
