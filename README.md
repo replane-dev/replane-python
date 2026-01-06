@@ -114,8 +114,8 @@ with Replane[Configs](
     settings = replane.configs["app-settings"]
 
     # Full type safety - IDE knows the structure of settings
-    print(settings["maxUploadSizeMb"])
-    print(settings["allowedFileTypes"])
+    print(settings["max_upload_size_mb"])
+    print(settings["allowed_file_types"])
 
     # Check if config exists
     if "feature-flag" in replane.configs:

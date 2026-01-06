@@ -80,9 +80,9 @@ Example generated `replane_types.py`:
 from typing import List, TypedDict
 
 class AppSettings(TypedDict):
-    maxUploadSizeMb: float
-    allowedFileTypes: List[str]
-    maintenanceMode: bool
+    max_upload_size_mb: float
+    allowed_file_types: List[str]
+    maintenance_mode: bool
 
 class Configs(TypedDict):
     app-settings: AppSettings
@@ -102,8 +102,8 @@ with Replane[Configs](
 ) as replane:
     # Dictionary-style access with full type safety
     settings = replane.configs["app-settings"]
-    print(settings["maxUploadSizeMb"])  # IDE knows the type
-    print(settings["allowedFileTypes"])  # Autocomplete works
+    print(settings["max_upload_size_mb"])  # IDE knows the type
+    print(settings["allowed_file_types"])  # Autocomplete works
 ```
 
 ```{toctree}
