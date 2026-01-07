@@ -1,13 +1,30 @@
-# Replane Python SDK
+<h1 align="center">Replane Python SDK</h1>
+<p align="center">Dynamic configuration for Python applications.</p>
 
-Python SDK for [Replane](https://replane.dev) - a dynamic configuration platform with real-time updates.
+<p align="center">
+  <a href="https://cloud.replane.dev"><img src="https://img.shields.io/badge/Try-Replane%20Cloud-blue" alt="Replane Cloud"></a>
+  <a href="https://pypi.org/project/replane/"><img src="https://img.shields.io/pypi/v/replane" alt="PyPI"></a>
+  <a href="https://github.com/replane-dev/replane-python/actions"><img src="https://github.com/replane-dev/replane-python/actions/workflows/main.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/replane-dev/replane-python/blob/main/LICENSE"><img src="https://img.shields.io/github/license/replane-dev/replane-python" alt="License"></a>
+  <a href="https://github.com/orgs/replane-dev/discussions"><img src="https://img.shields.io/badge/discussions-join-blue?logo=github" alt="Community"></a>
+</p>
 
-[![PyPI](https://img.shields.io/pypi/v/replane)](https://pypi.org/project/replane/)
-[![CI](https://github.com/replane-dev/replane-python/actions/workflows/main.yml/badge.svg)](https://github.com/replane-dev/replane-python/actions)
-[![License](https://img.shields.io/github/license/replane-dev/replane-python)](https://github.com/replane-dev/replane-python/blob/main/LICENSE)
-[![Community](https://img.shields.io/badge/discussions-join-blue?logo=github)](https://github.com/orgs/replane-dev/discussions)
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/replane-dev/replane/main/public/replane-window-screenshot-dark-v1.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/replane-dev/replane/main/public/replane-window-screenshot-light-with-border-v2.jpg">
+    <img alt="Replane Screenshot" src="https://raw.githubusercontent.com/replane-dev/replane/main/public/replane-window-screenshot-light-with-border-v2.jpg">
+</picture>
 
-> **Tip:** Get started instantly with [Replane Cloud](https://cloud.replane.dev) — no infrastructure required.
+[Replane](https://github.com/replane-dev/replane) is a dynamic configuration manager. Store feature flags, app settings, and operational config in one place—with version history, optional approvals, and realtime sync to your services. No redeploys needed.
+
+## Why Dynamic Configuration?
+
+- **Feature flags** – toggle features, run A/B tests, roll out to user segments
+- **Operational tuning** – adjust limits, TTLs, and timeouts without redeploying
+- **Per-environment settings** – different values for production, staging, dev
+- **Incident response** – instantly revert to a known-good version
+- **Cross-service configuration** – share settings with realtime sync
+- **Non-engineer access** – safe editing with schema validation
 
 ## Features
 
