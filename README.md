@@ -2,7 +2,6 @@
 <p align="center">Dynamic configuration for Python applications.</p>
 
 <p align="center">
-  <a href="https://cloud.replane.dev"><img src="https://img.shields.io/badge/Try-Replane%20Cloud-blue" alt="Replane Cloud"></a>
   <a href="https://pypi.org/project/replane/"><img src="https://img.shields.io/pypi/v/replane" alt="PyPI"></a>
   <a href="https://github.com/replane-dev/replane-python/actions"><img src="https://github.com/replane-dev/replane-python/actions/workflows/main.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/replane-dev/replane-python/blob/main/LICENSE"><img src="https://img.shields.io/github/license/replane-dev/replane-python" alt="License"></a>
@@ -54,7 +53,7 @@ from replane import Replane
 
 # Using context manager (recommended)
 with Replane(
-    base_url="https://cloud.replane.dev",  # or your self-hosted URL
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
     # Get a simple config value
@@ -76,7 +75,7 @@ Requires `pip install replane[async]`:
 from replane import AsyncReplane
 
 async with AsyncReplane(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
     # Access configs from local cache
@@ -93,7 +92,7 @@ from replane import Replane
 
 # Option 1: Provide credentials in constructor
 replane = Replane(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 )
 replane.connect()
@@ -101,7 +100,7 @@ replane.connect()
 # Option 2: Provide credentials in connect()
 replane = Replane()
 replane.connect(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 )
 
@@ -124,7 +123,7 @@ from replane_types import Configs  # Generated from Replane dashboard
 
 # Use the Configs TypedDict as a type parameter
 with Replane[Configs](
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
     # Access configs with dictionary-style notation
@@ -155,7 +154,7 @@ Both clients accept the same configuration:
 
 ```python
 replane = Replane(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 
     # Default context applied to all config evaluations
@@ -207,7 +206,7 @@ Create scoped clients for specific users or requests using `with_context()`:
 
 ```python
 with Replane(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
     # Create a scoped client for a specific user
@@ -232,7 +231,7 @@ Create scoped clients with fallback values using `with_defaults()`:
 
 ```python
 with Replane(
-    base_url="https://cloud.replane.dev",
+    base_url="https://replane.example.com",
     sdk_key="rp_...",
 ) as replane:
     # Create a client with fallback defaults
@@ -419,7 +418,7 @@ _replane: AsyncReplane | None = None
 async def lifespan(app: FastAPI):
     global _replane
     _replane = AsyncReplane(
-        base_url="https://cloud.replane.dev",
+        base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
     await _replane.connect()
@@ -454,7 +453,7 @@ _replane: Replane | None = None
 def init_replane():
     global _replane
     _replane = Replane(
-        base_url="https://cloud.replane.dev",
+        base_url="https://replane.example.com",
         sdk_key="rp_...",
     )
     _replane.connect()

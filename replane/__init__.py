@@ -7,7 +7,7 @@ Quick start (sync):
     >>> from replane import Replane
     >>>
     >>> with Replane(
-    ...     base_url="https://cloud.replane.dev",
+    ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
     ... ) as replane:
     ...     if replane.configs["new-feature-enabled"]:
@@ -17,7 +17,7 @@ Quick start (async):
     >>> from replane import AsyncReplane
     >>>
     >>> async with AsyncReplane(
-    ...     base_url="https://cloud.replane.dev",
+    ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
     ... ) as replane:
     ...     user_client = replane.with_context({"plan": user.plan})
@@ -28,7 +28,7 @@ With generated TypedDict types for better type safety (recommended):
     >>> from replane_types import Configs
     >>>
     >>> with Replane[Configs](
-    ...     base_url="https://cloud.replane.dev",
+    ...     base_url="https://replane.example.com",
     ...     sdk_key="rp_...",
     ... ) as replane:
     ...     config = replane.configs["my-feature"]  # fully typed dict access

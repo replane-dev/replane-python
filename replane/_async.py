@@ -289,7 +289,7 @@ class AsyncReplane(Generic[ConfigsT]):
 
     Example with context manager (recommended):
         >>> async with AsyncReplane(
-        ...     base_url="https://cloud.replane.dev",
+        ...     base_url="https://replane.example.com",
         ...     sdk_key="rp_...",
         ... ) as replane:
         ...     value = replane.configs["feature-flag"]
